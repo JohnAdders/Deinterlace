@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.13 2002-03-09 10:48:52 pgubanov Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.14 2002-03-14 07:44:01 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2002/03/09 10:48:52  pgubanov
+// Copy history correctly. Fix access violation in StopStreaming() - caused by exceeding array bounds of m_pInputHistory[]
+//
 // Revision 1.12  2002/01/14 12:56:04  pgubanov
 // Fixed locking policy for Deinterlace() method to prevent deadlock when brinning up property page in paused state
 //
@@ -199,17 +202,12 @@ CBasePin* CDeinterlaceFilter::GetPin(int n)
 
 } // GetPin
 
-/////////////////////////////////////////////////////////////////////////////
-// Start Streaming
-/////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::StartStreaming()
+//
+// Create plugin wrapper and activate
+//
+HRESULT CDeinterlaceFilter::ActivateDeinterlacePlugin()
 {
-    for (int i = 0;i < MAX_FRAMES_IN_HISTORY;i++)
-    {
-        m_pInputHistory[i] = NULL;
-    }
-
-    if(m_DeinterlaceType == IDC_TYPE4 && m_PlugInName != NULL)
+	if (m_PlugInName != NULL)
     {
         // convert BSTR to a char string so that we
         // can use it to load plugin on all
@@ -224,6 +222,39 @@ HRESULT CDeinterlaceFilter::StartStreaming()
         {
             m_pDeinterlacePlugin->StartStreaming();
         }
+    }
+
+	return S_OK;
+}
+
+//
+// Delete plugin wrapper
+//
+HRESULT CDeinterlaceFilter::InactivateDeinterlacePlugin()
+{
+    if (m_pDeinterlacePlugin) 
+    {
+        m_pDeinterlacePlugin->StopStreaming();
+        delete m_pDeinterlacePlugin;
+        m_pDeinterlacePlugin = NULL;
+    }
+
+	return S_OK;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Start Streaming
+/////////////////////////////////////////////////////////////////////////////
+HRESULT CDeinterlaceFilter::StartStreaming()
+{
+    for (int i = 0;i < MAX_FRAMES_IN_HISTORY;i++)
+    {
+        m_pInputHistory[i] = NULL;
+    }
+
+    if(m_DeinterlaceType == IDC_TYPE4)
+    {
+		ActivateDeinterlacePlugin();
     }
 
     /////////////////////////////////////////////////////////
@@ -297,12 +328,7 @@ HRESULT CDeinterlaceFilter::StopStreaming()
         m_pInputHistory[i] = NULL;
     }
 
-    if (m_pDeinterlacePlugin) 
-    {
-        m_pDeinterlacePlugin->StopStreaming();
-        delete m_pDeinterlacePlugin;
-        m_pDeinterlacePlugin = NULL;
-    }
+	InactivateDeinterlacePlugin();
 
     return CTransformFilter::StopStreaming();
 }
@@ -734,10 +760,16 @@ void CDeinterlaceFilter::CallDeinterlaceMethod(TDeinterlaceInfo* pInfo, int Dein
         DeinterlaceFieldBob(pInfo);
         break;
     case IDC_TYPE4:
-		// Hold critical section to be sure m_pDeinterlacePlugin is valid
+		// Make sure plug-in is activated
+		if (m_pDeinterlacePlugin)
 		{
+			// Hold critical section to be sure m_pDeinterlacePlugin is valid
 		    CAutoLock l(&m_DeinterlaceLock);
 	        m_pDeinterlacePlugin->Process(pInfo);
+		}
+		else {
+			// This should never happen, but something may fail.
+	        DeinterlaceFieldWeave(pInfo);
 		}
         break;
     }
@@ -1162,8 +1194,9 @@ STDMETHODIMP CDeinterlaceFilter::get_DScalerPluginName(BSTR* pPlugInName)
 STDMETHODIMP CDeinterlaceFilter::put_DScalerPluginName(BSTR PlugInName)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
+	InactivateDeinterlacePlugin();
     m_PlugInName = PlugInName;
-    return NOERROR;
+    return ActivateDeinterlacePlugin();
 }
 
 STDMETHODIMP CDeinterlaceFilter::get_RefreshRateDouble(VARIANT_BOOL* pRateDouble)
