@@ -1,4 +1,3 @@
-
  TODO:
    
    * Build a player app that includes the filter
@@ -16,7 +15,11 @@
    * Rewrite media type negotiation to use upstream filter's enumerator
      Pass all media type changes from a downstream filter upstream and
      perform deinterlacing only on known media types - otherwise
-     copy samples unmodified
+     copy samples unmodified 
+
+   * Update code to match project coding standards
+
+   * sort out problem with VIDEOINFO2 and VIDEOINFO inputs allowing both
 
 If you want to help please see the developer page at
 http://www.dscaler.org/
