@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.7 2001-11-28 09:45:56 pgubanov Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.8 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2001/11/28 09:45:56  pgubanov
+// Fix: we have to update overlay pitch every time we are notified of output format change. John, setting up m_Info in StartStreaming() is not enough - take care of dynamic changes!
+//
 // Revision 1.6  2001/11/14 17:06:21  adcockj
 // Added About Page
 //
@@ -83,9 +86,12 @@ CDeinterlaceFilter::CDeinterlaceFilter(TCHAR* tszName, LPUNKNOWN punk, HRESULT* 
     CPersistStream(punk, phr),
     m_pDeinterlacePlugin(NULL),
     m_bIsOddFieldFirst(TRUE),
-    m_History(0)
+    m_History(0),
+    m_RateDouble(TRUE)
 {
     memset(&m_Info, 0, sizeof(m_Info));
+    DbgSetModuleLevel(LOG_ERROR, 5);
+    DbgSetModuleLevel(LOG_TRACE, 3);
 }
 
 
@@ -220,6 +226,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     m_Info.FrameWidth = pbiIn->biWidth;
     m_Info.FrameHeight = pbiIn->biHeight;
     m_Info.FieldHeight = pbiIn->biHeight / 2;
+    m_Info.InputPitch = pbiIn->biSizeImage / pbiIn->biHeight / 2;
     if (m_Info.FieldHeight > MAX_INPUT_LINES_PER_FIELD) 
     {
         m_Info.FieldHeight = MAX_INPUT_LINES_PER_FIELD;
@@ -241,10 +248,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
         m_Info.pMemcpy = memcpyMMX;
     }
 
-    m_Info.OddLines[0] = m_OddLines[0];
-    m_Info.EvenLines[0] = m_EvenLines[0];
-    m_Info.OddLines[1] = m_OddLines[1];
-    m_Info.EvenLines[1] = m_EvenLines[1];
+    memset(m_Pictures, 0, sizeof(TPicture) * 4);
 
     m_History = 0;
     m_LastStop = -1;
@@ -281,7 +285,11 @@ STDMETHODIMP CDeinterlaceFilter::NonDelegatingQueryInterface(REFIID riid, void**
 {
     CheckPointer(ppv,E_POINTER);
 
-    if (riid == IID_IDeinterlace)
+    if (riid == IID_IDeinterlace2)
+    {
+        return GetInterface((IDeinterlace2*) this, ppv);
+    }
+    else if (riid == IID_IDeinterlace)
     {
         return GetInterface((IDeinterlace*) this, ppv);
     }
@@ -306,7 +314,6 @@ STDMETHODIMP CDeinterlaceFilter::NonDelegatingQueryInterface(REFIID riid, void**
 // Actually do processing on data
 // This is called from within the base classes
 /////////////////////////////////////////////////////////////////////////////
-long BitShift = 13;
 long EdgeDetect = 625;
 long JaggieThreshold = 73;
 long DiffThreshold = 224;
@@ -484,23 +491,21 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     
     AM_SAMPLE2_PROPERTIES*  const pProps = m_pInput->SampleProps();
 
+
+    for (i=3; i > 1; --i) 
+    {
+        memcpy(&m_Pictures[i], &m_Pictures[i], sizeof(TPicture));
+    }
+    
     if(m_bIsOddFieldFirst)
     {
-        for (i=0;i<m_Info.FieldHeight;i++) 
-        {
-            m_OddLines[1][i] = m_OddLines[0][i];
-            m_OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*m_Info.LineLength);
-        }
-        m_Info.IsOdd = TRUE;
+        m_Pictures[i].pData = pSourceBuffer + m_Info.InputPitch / 2;
+        m_Pictures[i].Flags = PICTURE_INTERLACED_ODD;
     }
     else
     {
-        for (i=0;i<m_Info.FieldHeight;i++) 
-        {
-            m_EvenLines[1][i] = m_EvenLines[0][i];
-            m_EvenLines[0][i] = (short*)(pSourceBuffer+(2*i)*m_Info.LineLength);
-        }
-        m_Info.IsOdd = FALSE;
+        m_Pictures[i].pData = pSourceBuffer;
+        m_Pictures[i].Flags = PICTURE_INTERLACED_EVEN;
     }
     ++m_History;
 
@@ -513,38 +518,42 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
 
     // Generate first field
     IMediaSample* pDest;
-
-    HRESULT hr = GetOutputSampleBuffer(pSource,&pDest);
-    if (FAILED(hr))
-    {
-        return NOERROR;
-    }
-
     BYTE* pDestBuffer;
-    pDest->GetPointer(&pDestBuffer);
+    HRESULT hr;
 
-    m_Info.Overlay = pDestBuffer;
-
-    if(m_History > 3)
+    if(m_RateDouble)
     {
-        CallDeinterlaceMethod(&m_Info);
+        hr = GetOutputSampleBuffer(pSource,&pDest);
+        if (FAILED(hr))
+        {
+            return NOERROR;
+        }
+
+        pDest->GetPointer(&pDestBuffer);
+
+        m_Info.Overlay = pDestBuffer;
+
+        if(m_History > 3)
+        {
+            CallDeinterlaceMethod(&m_Info);
+        }
+        else
+        {
+            Bob(&m_Info);
+        }
+
+        rtStop = rtStart + (rtStop - rtStart)/2;
+        pDest->SetTime(&rtStart,&rtStop);
+
+        m_pOutput->Deliver(pDest);
+
+        pDest->Release();
+        pDest = NULL;
     }
-    else
-    {
-        Bob(&m_Info);
-    }
-
-    rtStop = rtStart + (rtStop - rtStart)/2;
-    pDest->SetTime(&rtStart,&rtStop);
-
-    m_pOutput->Deliver(pDest);
-
-    pDest->Release();
-    pDest = NULL;
 
     //
-    // Generate second field
-    //
+    // Generate second field or only field if doing rate doubling
+    // 
     hr = GetOutputSampleBuffer(pSource,&pDest);
     if (FAILED(hr))
         return NOERROR;
@@ -553,23 +562,20 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
 
     m_Info.Overlay = pDestBuffer;
 
+    for (i=3; i > 1; --i) 
+    {
+        memcpy(&m_Pictures[i], &m_Pictures[i], sizeof(TPicture));
+    }
+    
     if(m_bIsOddFieldFirst)
     {
-        for (i=0;i<m_Info.FieldHeight;i++) 
-        {
-            m_EvenLines[1][i] = m_EvenLines[0][i];
-            m_EvenLines[0][i] = (short*)(pSourceBuffer+(2*i)*m_Info.LineLength);
-        }
-        m_Info.IsOdd = FALSE;
+        m_Pictures[i].pData = pSourceBuffer;
+        m_Pictures[i].Flags = PICTURE_INTERLACED_EVEN;
     }
     else
     {
-        for (i=0;i<m_Info.FieldHeight;i++) 
-        {
-            m_OddLines[1][i] = m_OddLines[0][i];
-            m_OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*m_Info.LineLength);
-        }
-        m_Info.IsOdd = TRUE;
+        m_Pictures[i].pData = pSourceBuffer + m_Info.InputPitch / 2;
+        m_Pictures[i].Flags = PICTURE_INTERLACED_ODD;
     }
     ++m_History;
 
@@ -583,7 +589,10 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     }
 
     // Time for second field
-    rtStart = rtStart + (rtStop - rtStart + 1)/2;
+    if(m_RateDouble)
+    {
+        rtStart = rtStart + (rtStop - rtStart + 1)/2;
+    }
     pDest->SetTime(&rtStart,&rtStop);
 
     m_pOutput->Deliver(pDest);
@@ -595,7 +604,7 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
 //
 // Call apropriate deinterlace method
 //
-void CDeinterlaceFilter::CallDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
+void CDeinterlaceFilter::CallDeinterlaceMethod(TDeinterlaceInfo* pInfo) const
 {
     switch (m_DeinterlaceType) 
     {
@@ -604,7 +613,7 @@ void CDeinterlaceFilter::CallDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
         DeinterlaceFieldWeave(pInfo);
         break;
     case IDC_BOB:
-        DeinterlaceFieldBob(pInfo);
+        Bob(pInfo);
         break;
     case IDC_TYPE1:
         DeinterlaceFieldTwoFrame(pInfo);
@@ -826,20 +835,23 @@ HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType* pMediaType)
     CMediaType cmt;
     cmt = m_pInput->CurrentMediaType();
 
-    if(IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) 
+    if(m_RateDouble)
     {
-        VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)cmt.Format();
-        // we output 2 samples for each incoming sample
-        pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
-        pvi->dwBitRate = pvi->dwBitRate*2;
-        pvi->dwInterlaceFlags = 0;  // progressive
-    }
-    else if(IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) 
-    {
-        VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)cmt.Format();
-        // we output 2 samples for each incoming sample
-        pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
-        pvi->dwBitRate = pvi->dwBitRate*2;
+        if(IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) 
+        {
+            VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)cmt.Format();
+            // we output 2 samples for each incoming sample
+            pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+            pvi->dwBitRate = pvi->dwBitRate*2;
+            pvi->dwInterlaceFlags = 0;  // progressive
+        }
+        else if(IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) 
+        {
+            VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)cmt.Format();
+            // we output 2 samples for each incoming sample
+            pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+            pvi->dwBitRate = pvi->dwBitRate*2;
+        }
     }
 
     *pMediaType = cmt;
@@ -993,7 +1005,7 @@ STDMETHODIMP CDeinterlaceFilter::GetPages(CAUUID* pPages)
 /////////////////////////////////////////////////////////////////////////////
 // Inplement IDeinterlace Functions
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(long* piType)
+STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(int* piType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
     CheckPointer(piType,E_POINTER);
@@ -1002,7 +1014,7 @@ STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(long* piType)
 }
 
 
-STDMETHODIMP CDeinterlaceFilter::put_DeinterlaceType(long iType)
+STDMETHODIMP CDeinterlaceFilter::put_DeinterlaceType(int iType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
     m_DeinterlaceType = iType;
@@ -1036,5 +1048,19 @@ STDMETHODIMP CDeinterlaceFilter::put_DScalerPluginName(BSTR PlugInName)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
     m_PlugInName = PlugInName;
+    return NOERROR;
+}
+
+STDMETHODIMP CDeinterlaceFilter::get_RefreshRateDouble(VARIANT_BOOL* pRateDouble)
+{
+    CAutoLock cAutolock(&m_DeinterlaceLock);
+    *pRateDouble = m_RateDouble?VARIANT_TRUE:VARIANT_FALSE;
+    return NOERROR;
+}
+
+STDMETHODIMP CDeinterlaceFilter::put_RefreshRateDouble(VARIANT_BOOL RateDouble)
+{
+    CAutoLock cAutolock(&m_DeinterlaceLock);
+    m_RateDouble = (RateDouble == VARIANT_TRUE);
     return NOERROR;
 }

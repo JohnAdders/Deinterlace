@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.h,v 1.4 2001-11-28 09:45:56 pgubanov Exp $
+// $Id: DeinterlaceFilter.h,v 1.5 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@
 class CDeinterlacePlugin;
 
 class CDeinterlaceFilter : public CTransformFilter,
-		 public IDeinterlace,
+		 public IDeinterlace2,
 		 public ISpecifyPropertyPages,
 		 public CPersistStream
 {
@@ -68,13 +68,17 @@ public:
     HRESULT StartStreaming();
     HRESULT StopStreaming();
 
-	// These implement the custom IIPEffect interface
-    STDMETHOD(get_DeinterlaceType)(long* IPEffect);
-    STDMETHOD(put_DeinterlaceType)(long IPEffect);
+	// These implement the IDeinerlace interface
+    STDMETHOD(get_DeinterlaceType)(int* IPEffect);
+    STDMETHOD(put_DeinterlaceType)(int IPEffect);
+
+    // These implement the IDeinerlace2 interface
     STDMETHOD(get_IsOddFieldFirst)(VARIANT_BOOL* OddFirst);
     STDMETHOD(put_IsOddFieldFirst)(VARIANT_BOOL OddFirst);
     STDMETHOD(get_DScalerPluginName)(BSTR* OddFirst);
     STDMETHOD(put_DScalerPluginName)(BSTR OddFirst);
+    STDMETHOD(get_RefreshRateDouble)(VARIANT_BOOL* RateDouble);
+    STDMETHOD(put_RefreshRateDouble)(VARIANT_BOOL RateDouble);
 
     // ISpecifyPropertyPages interface
     STDMETHOD(GetPages)(CAUUID* pPages);
@@ -86,7 +90,7 @@ private:
     BOOL CanPerformDeinterlace(const CMediaType* pMediaType) const;
 	HRESULT GetOutputSampleBuffer(IMediaSample* pSource,IMediaSample** ppOutput);
     HRESULT Deinterlace(IMediaSample* pIn);
-	void CallDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const;
+	void CallDeinterlaceMethod(TDeinterlaceInfo* pInfo) const;
 
 	void FixOverlayPitch();
 
@@ -94,13 +98,13 @@ private:
     int         m_DeinterlaceType;  // Which type of deinterlacing shall we do
 	CComPtr<IMediaSample> m_pInputHistory[MAX_FRAMES_IN_HISTORY];
 	CDeinterlacePlugin* m_pDeinterlacePlugin;
-    DEINTERLACE_INFO m_Info;
-    short* m_OddLines[2][MAX_INPUT_LINES_PER_FIELD];
-	short* m_EvenLines[2][MAX_INPUT_LINES_PER_FIELD];
+    TDeinterlaceInfo m_Info;
+    TPicture m_Pictures[4];
     int m_History;
     REFERENCE_TIME m_LastStop;
     BOOL m_bIsOddFieldFirst;
     CComBSTR m_PlugInName;
+    BOOL m_RateDouble;
 };
 
 #endif

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DI.h,v 1.4 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DI.h,v 1.5 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -43,7 +43,6 @@ void memcpyBOBMMX(void *Dest1, void *Dest2, void *Src, size_t nBytes);
 long GetCombFactor(short** pLines1, short** pLines2);
 long CompareFields(short** pLines1, short** pLines2, RECT *rect);
 
-extern long BitShift;
 extern long EdgeDetect;
 extern long JaggieThreshold;
 extern long DiffThreshold;

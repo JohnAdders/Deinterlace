@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DI_Plugin.h,v 1.1 2001-11-14 16:42:18 adcockj Exp $
+// $Id: DI_Plugin.h,v 1.2 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // A generic DScaler Deinterlace plugin wrapper class
 /////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ public:
 	~CDeinterlacePlugin();
 
 	void StartStreaming();
-	void Process(DEINTERLACE_INFO *Info);
+	void Process(TDeinterlaceInfo *Info);
 	void StopStreaming();
 	void ShowSettingsDialog(HWND hwnd);
 private:

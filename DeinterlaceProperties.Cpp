@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceProperties.Cpp,v 1.5 2001-11-14 16:42:18 adcockj Exp $
+// $Id: DeinterlaceProperties.Cpp,v 1.6 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2001/11/14 16:42:18  adcockj
+// Added support for any plugin
+//
 // Revision 1.4  2001/11/14 13:42:22  adcockj
 // Fixed compile errors
 //
@@ -112,7 +115,7 @@ HRESULT CDeinterlaceProperties::OnConnect(IUnknown *pUnknown)
 {
     ASSERT(m_pIDeinterlace == NULL);
 
-    HRESULT hr = pUnknown->QueryInterface(IID_IDeinterlace, (void **) &m_pIDeinterlace);
+    HRESULT hr = pUnknown->QueryInterface(IID_IDeinterlace2, (void **) &m_pIDeinterlace);
     if (FAILED(hr))
     {
         return E_NOINTERFACE;
@@ -160,6 +163,14 @@ HRESULT CDeinterlaceProperties::OnActivate()
     {
         CheckDlgButton(m_Dlg, IDC_ODDFIELDFIRST, BST_UNCHECKED);
     }
+    if(m_RateDouble)
+    {
+        CheckDlgButton(m_Dlg, IDC_RATEDOUBLE, BST_CHECKED);
+    }
+    else
+    {
+        CheckDlgButton(m_Dlg, IDC_RATEDOUBLE, BST_UNCHECKED);
+    }
     FillComboBox();
     m_bIsInitialized = TRUE;
     return NOERROR;
@@ -187,6 +198,7 @@ HRESULT CDeinterlaceProperties::OnApplyChanges()
     m_pIDeinterlace->put_DeinterlaceType(m_DeinterlaceType);
     m_pIDeinterlace->put_IsOddFieldFirst(m_OddFieldFirst);
     m_pIDeinterlace->put_DScalerPluginName(m_PluginName);
+    m_pIDeinterlace->put_RefreshRateDouble(m_RateDouble);
     return NOERROR;
 }
 
@@ -215,6 +227,14 @@ void CDeinterlaceProperties::GetControlValues()
     {
         m_OddFieldFirst = VARIANT_FALSE;
     }
+    if(IsDlgButtonChecked(m_Dlg, IDC_RATEDOUBLE))
+    {
+        m_RateDouble = VARIANT_TRUE;
+    }
+    else
+    {
+        m_RateDouble = VARIANT_FALSE;
+    }
     if(ComboBox_GetCount(GetDlgItem(m_Dlg, IDC_PLUGINS)) > 0 &&
         ComboBox_GetCurSel(GetDlgItem(m_Dlg, IDC_PLUGINS)) >= 0)
     {
@@ -227,7 +247,6 @@ void CDeinterlaceProperties::GetControlValues()
     {
         m_PluginName = L"";
     }
-    
 }
 
 void CDeinterlaceProperties::FillComboBox()

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.idl,v 1.3 2001-11-14 17:06:21 adcockj Exp $
+// $Id: Deinterlace.idl,v 1.4 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/11/14 17:06:21  adcockj
+// Added About Page
+//
 // Revision 1.2  2001/11/14 16:42:18  adcockj
 // Added support for any plugin
 //
@@ -46,22 +49,62 @@ import "ocidl.idl";
 // if you wish to ship this filter with another product and do not
 // want to interfeer with any future changes to the public
 // veriosn of this filter please generate new GUID values
-// for all the values below
+// for all the values below as has been done already with the HAUPPAUGE_BUILD
+// define
 /////////////////////////////////////////////////////////////////////////////
 
-
+/////////////////////////////////////////////////////////////////////////////
+// This is the version of the interface supported by version 1.0.0
+//
+// INTERFACE FIXED
+//
+// Applications may write to this interface and by allowing them
+// to do so we have contracted to provided this interface for ever
+/////////////////////////////////////////////////////////////////////////////
 [
 	object,
+#ifdef HAUPPAUGE_BUILD
 	uuid(463D645C-48F7-11d4-8464-0008C782A257),
+#else
+	uuid(304030C4-4283-4e5a-8268-D0A68AC79EAD),
+#endif
 	helpstring("IDeinterlace Interface"),
 	pointer_default(unique)
 ]
 interface IDeinterlace : IUnknown
 {
     [propget, id(1), helpstring("property DeinterlaceType")] 
-    HRESULT DeinterlaceType([out, retval] long* pVal);
+    HRESULT DeinterlaceType([out, retval] int* pVal);
     [propput, id(1), helpstring("property DeinterlaceType")] 
-    HRESULT DeinterlaceType([in] long newVal);
+    HRESULT DeinterlaceType([in] int newVal);
+    ////////////////////////////////
+    // Do not add anything here
+    // This interface has been fixed
+    ////////////////////////////////
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// This is the version of the interface supported by the current version
+//
+// INTERFACE IN FLUX
+//
+// it may be changed at any time, do not code applications to this
+// interface unless you are prepared to keep then up to date
+// if we change this your application may collapse in a big heap
+/////////////////////////////////////////////////////////////////////////////
+[
+	object,
+#ifdef HAUPPAUGE_BUILD
+	uuid(7402D283-1AA1-4bbb-B2D7-9B677270D531),
+#else
+	uuid(9BEFC65D-1EB8-402e-B277-AD10949E9C19),
+#endif
+	helpstring("IDeinterlace2 Interface"),
+	pointer_default(unique)
+]
+interface IDeinterlace2 : IDeinterlace
+{
     [propget, id(2), helpstring("property IsOddFieldFirst")] 
     HRESULT IsOddFieldFirst([out, retval] VARIANT_BOOL* pVal);
     [propput, id(2), helpstring("property IsOddFieldFirst")] 
@@ -70,12 +113,20 @@ interface IDeinterlace : IUnknown
     HRESULT DScalerPluginName([out, retval] BSTR* pVal);
     [propput, id(3), helpstring("property DScalerPluginName")] 
     HRESULT DScalerPluginName([in] BSTR newVal);
+    [propget, id(4), helpstring("property RefreshRateDouble")] 
+    HRESULT RefreshRateDouble([out, retval] VARIANT_BOOL* pVal);
+    [propput, id(4), helpstring("property RefreshRateDouble")] 
+    HRESULT RefreshRateDouble([in] VARIANT_BOOL newVal);
 };
 
 [
+#ifdef HAUPPAUGE_BUILD
 	uuid(7B08AC97-2997-4D9D-BE7B-8DB876944E54),
+#else
+	uuid(702D0006-FCE7-4392-827B-C7580DDB0425),
+#endif
 	version(1.0),
-	helpstring("Deinterlace 1.0 Type Library")
+	helpstring("Deinterlace 1.1 Type Library")
 ]
 library DeinterlaceLib
 {
@@ -83,16 +134,24 @@ library DeinterlaceLib
 	importlib("stdole2.tlb");
 
 	[
-		uuid(463D645D-48F7-11d4-8464-0008C782A257),
+#ifdef HAUPPAUGE_BUILD
+    	uuid(463D645D-48F7-11d4-8464-0008C782A257),
+#else
+	    uuid(437B0D3A-4689-4fa6-A7DD-EB4928203C2F),
+#endif
 		helpstring("Deinterlace Class")
 	]
 	coclass Deinterlace
 	{
-		[default] interface IDeinterlace;
+		[default] interface IDeinterlace2;
 	};
 
 	[
-		uuid(463D645E-48F7-11d4-8464-0008C782A257),
+#ifdef HAUPPAUGE_BUILD
+    	uuid(463D645E-48F7-11d4-8464-0008C782A257),
+#else
+	    uuid(E1AA698A-C292-488d-8F3A-29D44FB070CA),
+#endif
 		helpstring("DeinterlacePropertyPage Class")
 	]
 	coclass DeinterlacePropertyPage
@@ -101,7 +160,11 @@ library DeinterlaceLib
 	};
 
 	[
-		uuid(B26BFF59-55BB-4a9e-94F9-56652554E42F),
+#ifdef HAUPPAUGE_BUILD
+    	uuid(B26BFF59-55BB-4a9e-94F9-56652554E42F),
+#else
+	    uuid(E5C790A0-7D55-45d5-8422-06739B8BC2D9),
+#endif
 		helpstring("DeinterlaceAboutPage Class")
 	]
 	coclass DeinterlaceAboutPage

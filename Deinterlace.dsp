@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 quartz.lib strmbase.lib winmm.lib msvcrt.lib vfw32.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib largeint.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"Deinterlace.ax" /subsystem:windows,4.0 /opt:ref /release /debug:none
+# ADD LINK32 quartz.lib strmbase.lib winmm.lib msvcrt.lib vfw32.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib largeint.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"Deinterlace.ax" /subsystem:windows,4.0 /release /debug:none
 # Begin Custom Build - Performing registration
 OutDir=.
 TargetPath=.\Deinterlace.ax
@@ -226,7 +226,7 @@ SOURCE=.\Deinterlace.idl
 SOURCE=.\DeinterlaceAbout.Cpp
 DEP_CPP_DEINTE=\
 	".\Deinterlace.h"\
-	".\DeinterlaceProperties.h"\
+	".\DeinterlaceAbout.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\

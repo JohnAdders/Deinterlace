@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceInputPin.cpp,v 1.1 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DeinterlaceInputPin.cpp,v 1.2 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,10 +29,16 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2001/11/13 13:51:43  adcockj
+// Tidy up code and made to mostly conform to coding standards
+// Changed history behaviour
+// Made to use DEINTERLACE_INFO throughout
+//
 /////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"
+#include "resource.h"
 #include "DeinterlaceInputPin.h"
 
 CDeinterlaceInputPin::CDeinterlaceInputPin( 
@@ -112,7 +118,9 @@ STDMETHODIMP CDeinterlaceInputPin::NotifyAllocator(IMemAllocator * pAllocator, B
         m_pAllocator->GetProperties(&Props);
         if (Props.cBuffers < MAX_FRAMES_IN_HISTORY+1)
         {
-            hr = E_FAIL;
+            // if we haven't got enough history reset the 
+            m_pDeinterlaceFilter->put_RefreshRateDouble(VARIANT_FALSE);
+            m_pDeinterlaceFilter->put_DeinterlaceType(IDC_TYPE3);
         }
     }
 

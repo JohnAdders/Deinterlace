@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceProperties.h,v 1.5 2001-11-14 16:42:18 adcockj Exp $
+// $Id: DeinterlaceProperties.h,v 1.6 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -47,13 +47,18 @@ private:
     HRESULT OnApplyChanges();
     void    GetControlValues();
 
+
+private:
+    void FillComboBox();
+
 private:
     BOOL m_bIsInitialized;      // Used to ignore startup messages
-    long m_DeinterlaceType;      // Which type of deinterlacing shall we do
+    IDeinterlace2* m_pIDeinterlace;  // The custom interface on the filter
+
+    int m_DeinterlaceType;
     VARIANT_BOOL m_OddFieldFirst;
+    VARIANT_BOOL m_RateDouble;
     BSTR m_PluginName;
-    IDeinterlace* m_pIDeinterlace;  // The custom interface on the filter
-    void FillComboBox();
 };
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DI_Plugin.cpp,v 1.1 2001-11-14 16:42:18 adcockj Exp $
+// $Id: DI_Plugin.cpp,v 1.2 2001-12-11 17:31:58 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 Peter Gubanov.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2001/11/14 16:42:18  adcockj
+// Added support for any plugin
+//
 // Revision 1.3  2001/11/13 13:51:43  adcockj
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
@@ -124,7 +127,7 @@ void CDeinterlacePlugin::StopStreaming()
     m_fStreaming = FALSE;
 }
 
-void CDeinterlacePlugin::Process(DEINTERLACE_INFO *pInfo) 
+void CDeinterlacePlugin::Process(TDeinterlaceInfo* pInfo) 
 {
     // can't use CAutolock as we're
     // going to use SEH

@@ -56,22 +56,24 @@ STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Deinterlace Type",IDS_STATIC,6,5,222,38
-    CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,13,26,41,12
     CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,13,14,44,
                     12
-    CONTROL         "Blended Clipping",IDC_TYPE2,"Button",BS_AUTORADIOBUTTON,
-                    61,26,83,12
     CONTROL         "Two Frame",IDC_TYPE1,"Button",BS_AUTORADIOBUTTON,61,14,
                     84,12
     CONTROL         "Field Bob",IDC_TYPE3,"Button",BS_AUTORADIOBUTTON,146,14,
                     45,10
+    CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,13,26,41,12
+    CONTROL         "Blended Clipping",IDC_TYPE2,"Button",BS_AUTORADIOBUTTON,
+                    61,26,83,12
     CONTROL         "Use DScaler Plug-in",IDC_TYPE4,"Button",
                     BS_AUTORADIOBUTTON,146,27,79,10
     CONTROL         "Is Odd Field First",IDC_ODDFIELDFIRST,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,8,47,118,11
+                    BS_AUTOCHECKBOX | WS_TABSTOP,8,47,101,11
+    CONTROL         "Refresh Rate Double",IDC_RATEDOUBLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,128,48,93,9
+    LTEXT           "DScaler Plug-ins",IDS_STATIC,9,69,96,8
     COMBOBOX        IDC_PLUGINS,8,85,211,63,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "DScaler Plug-ins",IDS_STATIC,9,69,96,8
 END
 
 IDD_DEINTERLACEABOUT DIALOG DISCARDABLE  0, 0, 231, 71
