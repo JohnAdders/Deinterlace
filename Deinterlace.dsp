@@ -109,21 +109,16 @@ SOURCE="$(InputPath)"
 
 # Name "Deinterlace - Win32 Release"
 # Name "Deinterlace - Win32 Debug"
+# Begin Group "Source Files"
+
+# PROP Default_Filter "*.cpp"
 # Begin Source File
 
-SOURCE=.\Copying.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Deinterlace.cpp
-DEP_CPP_DEINT=\
-	".\Deinterlace.h"\
-	".\DeinterlaceGuids.h"\
-	".\DeinterlaceProperties.h"\
-	".\IDeinterlace.h"\
+SOURCE=.\CPU.cpp
+DEP_CPP_CPU_C=\
+	".\cpu.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"audevcod.h"\
 	{$(INCLUDE)}"cache.h"\
 	{$(INCLUDE)}"combase.h"\
 	{$(INCLUDE)}"cprop.h"\
@@ -156,19 +151,44 @@ DEP_CPP_DEINT=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Deinterlace.def
-# End Source File
-# Begin Source File
-
-SOURCE=.\Deinterlace.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Deinterlace.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\DeinterlaceGuids.h
+SOURCE=.\Deinterlace.cpp
+DEP_CPP_DEINT=\
+	".\Deinterlace.h"\
+	".\DeinterlaceGuids.h"\
+	".\DeinterlaceProperties.h"\
+	".\DI.h"\
+	".\IDeinterlace.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"Schedule.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
 # End Source File
 # Begin Source File
 
@@ -180,7 +200,6 @@ DEP_CPP_DEINTE=\
 	".\IDeinterlace.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"audevcod.h"\
 	{$(INCLUDE)}"cache.h"\
 	{$(INCLUDE)}"combase.h"\
 	{$(INCLUDE)}"cprop.h"\
@@ -213,11 +232,86 @@ DEP_CPP_DEINTE=\
 # End Source File
 # Begin Source File
 
+SOURCE=.\DI_TwoFrame.cpp
+DEP_CPP_DI_TW=\
+	".\cpu.h"\
+	".\DI.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"Schedule.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
+# End Source File
+# End Group
+# Begin Group "Header Files"
+
+# PROP Default_Filter "*.h"
+# Begin Source File
+
+SOURCE=.\cpu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Deinterlace.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeinterlaceGuids.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\DeinterlaceProperties.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DI.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\IDeinterlace.h
+# End Source File
+# End Group
+# Begin Group "Resource Files"
+
+# PROP Default_Filter "*.rc"
+# Begin Source File
+
+SOURCE=.\Deinterlace.rc
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\Copying.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\Deinterlace.def
 # End Source File
 # Begin Source File
 

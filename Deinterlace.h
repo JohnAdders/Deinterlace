@@ -17,6 +17,11 @@
 // Deinterlace.h
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef _DEINTERLACE_H
+#define _DEINTERLACE_H
+
+#define MAX_FRAMES_IN_HISTORY	2
+
 class CDeinterlace : public CTransformFilter,
 		 public IDeinterlace,
 		 public ISpecifyPropertyPages,
@@ -36,12 +41,15 @@ public:
     HRESULT ReadFromStream(IStream *pStream);
     STDMETHODIMP GetClassID(CLSID *pClsid);
 
+	CBasePin *GetPin(int n);
+
     // Overrriden from CTransformFilter base class
     HRESULT Transform(IMediaSample *pIn, IMediaSample *pOut);
     HRESULT CheckInputType(const CMediaType *mtIn);
     HRESULT CheckTransform(const CMediaType *mtIn, const CMediaType *mtOut);
     HRESULT DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pProperties);
     HRESULT GetMediaType(int iPosition, CMediaType *pMediaType);
+    HRESULT StartStreaming();
     HRESULT StopStreaming();
 
 	// These implement the custom IIPEffect interface
@@ -61,8 +69,48 @@ private:
 
     CCritSec	m_DeinterlaceLock;  // Private play critical section
     int         m_DeinterlaceType;  // Which type of deinterlacing shall we do
+
+	IMediaSample *m_pInputHistory[MAX_FRAMES_IN_HISTORY];
 };
 
+// ==================================================
+// Implements the input pin
+// ==================================================
+
+class CDeinterlaceInputPin : public CTransformInputPin
+{
+
+protected:
+    CDeinterlace *m_pDeinterlaceFilter;    // our filter
+
+public:
+
+    CDeinterlaceInputPin(
+        TCHAR               *pObjectName,
+        CDeinterlace        *pFilter,
+        HRESULT             *phr,
+        LPCWSTR              pName);
+
+    // --- IMemInputPin -----
+
+    // Return our upstream allocator
+    STDMETHODIMP GetAllocator(IMemAllocator ** ppAllocator);
+
+    // get told which allocator the upstream output pin is actually
+    // going to use.
+    STDMETHODIMP NotifyAllocator(IMemAllocator * pAllocator,
+                                 BOOL bReadOnly);
+
+    // Allow the filter to see what allocator we have
+    // N.B. This does NOT AddRef
+    IMemAllocator * PeekAllocator()
+        {  return m_pAllocator; }
+
+    // Pass this on downstream if it ever gets called.
+    STDMETHODIMP
+    CDeinterlaceInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps);
+
+};  // CDeinterlaceInputPin
 
 /////////////////////////////////////////////////////////////////////////////
 // Macros used to read and write to stream
@@ -72,3 +120,5 @@ private:
 		       if (FAILED(hr)) return hr;
 #define READIN(var)    hr = pStream->Read(&var, sizeof(var), NULL); \
 		       if (FAILED(hr)) return hr;
+
+#endif	// _DEINTERLACE_H
