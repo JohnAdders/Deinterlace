@@ -18,6 +18,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include <windows.h>
+#include <atlbase.h>
 #include <streams.h>
 #include <dvdmedia.h>
 #include <initguid.h>
@@ -514,8 +515,8 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
         break;
     }
 
-	IMediaSample2 *pMediaSample2;
-	if (SUCCEEDED(pSource->QueryInterface(IID_IMediaSample2,(void**)&pMediaSample2))) {
+	CComQIPtr<IMediaSample2,&IID_IMediaSample2> pMediaSample2(pSource);
+	if (!(!pMediaSample2)) {
 		AM_SAMPLE2_PROPERTIES Props;
 		if (SUCCEEDED(pMediaSample2->GetProperties(sizeof(Props), (PBYTE)&Props))) {
 			DbgLog((LOG_TRACE,2,TEXT("Frame Type: %s, %s, "),
@@ -524,7 +525,6 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 				(Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD1FIRST ? "first field first" : ""),
 				(Props.dwSampleFlags & AM_VIDEO_FLAG_REPEAT_FIELD ? "repeat first field" : "") ));
 		}
-		pMediaSample2->Release();
 	}
     return NOERROR;
 }
