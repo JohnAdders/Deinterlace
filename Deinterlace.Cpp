@@ -462,38 +462,7 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
     int cbImage    = cyImage * cxImage * iPixelSize;
     int numPixels  = cxImage * cyImage;
     int Line;
-/*
-    switch (m_DeinterlaceType)
-    {
-	case IDC_WEAVE:
-		// doesn't do anything
-		// I assume that this is what was done by the capture filter
-		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
-		break;
-	case IDC_BOB:
-		// loop through the lines two at a time
-		// copy lower line of each pair to both upper and lower
-		for (Line = 1; Line < cyImage; ++Line, ++Line)
-		{
-			CopyMemory(pDestBuffer + (Line - 1) * cxImage * iPixelSize, pSourceBuffer + Line * cxImage * iPixelSize, cxImage * iPixelSize);
-			CopyMemory(pDestBuffer + Line * cxImage * iPixelSize, pSourceBuffer + Line * cxImage * iPixelSize, cxImage * iPixelSize);
-		}
-		break;
-	case IDC_TYPE1:
-		// go for it .....
-		// the current frame is in pSource
-		// you may need to save some data to do motion estimation
-		// do your worst....
-		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
-		break;
-	case IDC_TYPE2:
-		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
-		break;
-	case IDC_TYPE3:
-		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
-        break;
-    }
-*/
+
 	DEINTERLACE_INFO info;
 
 	short *OddLines[2][2048];
@@ -519,9 +488,44 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 	info.Overlay = pDestBuffer;
 	info.IsOdd = FALSE;
 
-	if (pPrevSourceBuffer)
-		DeinterlaceFieldTwoFrame(&info);
+    switch (m_DeinterlaceType)
+    {
+	case IDC_WEAVE:
+		// doesn't do anything
+		// I assume that this is what was done by the capture filter
+		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
+		break;
+	case IDC_BOB:
+		Bob(&info);
+		break;
+	case IDC_TYPE1:
+		// Let it be two frame
+		if (pPrevSourceBuffer)
+			DeinterlaceFieldTwoFrame(&info);
+		break;
+	case IDC_TYPE2:
+		// Let it be blended clipping
+		if (pPrevSourceBuffer)
+			BlendedClipping(&info);
+		break;
+	case IDC_TYPE3:
+		if (pPrevSourceBuffer)
+			DeinterlaceFieldBob(&info);
+        break;
+    }
 
+	IMediaSample2 *pMediaSample2;
+	if (SUCCEEDED(pSource->QueryInterface(IID_IMediaSample2,(void**)&pMediaSample2))) {
+		AM_SAMPLE2_PROPERTIES Props;
+		if (SUCCEEDED(pMediaSample2->GetProperties(sizeof(Props), (PBYTE)&Props))) {
+			DbgLog((LOG_TRACE,2,TEXT("Frame Type: %s, %s, "),
+				(Props.dwSampleFlags & AM_VIDEO_FLAG_I_SAMPLE ? "I" : (Props.dwSampleFlags & AM_VIDEO_FLAG_P_SAMPLE ? "P" : (Props.dwSampleFlags & AM_VIDEO_FLAG_B_SAMPLE ? "B" : "?"))),
+				(Props.dwSampleFlags & AM_VIDEO_FLAG_INTERLEAVED_FRAME ? "interleaved" : (Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD1 ? "field 1" : (Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD2 ? "field 2" : "?"))),
+				(Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD1FIRST ? "first field first" : ""),
+				(Props.dwSampleFlags & AM_VIDEO_FLAG_REPEAT_FIELD ? "repeat first field" : "") ));
+		}
+		pMediaSample2->Release();
+	}
     return NOERROR;
 }
 

@@ -52,27 +52,27 @@ END
 // Dialog
 //
 
-IDD_DEINTERLACEPROP DIALOGEX 0, 0, 199, 111
+IDD_DEINTERLACEPROP DIALOGEX 0, 0, 231, 127
 STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Deinterlace Type",IDS_STATIC,1,10,67,95
-    CONTROL         "Type 3",IDC_TYPE3,"Button",BS_AUTORADIOBUTTON,11,86,41,
-                    14
-    CONTROL         "Type 2",IDC_TYPE2,"Button",BS_AUTORADIOBUTTON,11,70,41,
-                    14
-    CONTROL         "Type 1",IDC_TYPE1,"Button",BS_AUTORADIOBUTTON,11,54,41,
-                    14
-    CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,11,38,41,14
-    CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,11,22,44,
-                    14
-    LTEXT           "Deinterlace DirectShow Filter",IDS_STATIC,73,9,94,11
-    LTEXT           "(c) John Adcock 2000",IDS_STATIC,95,23,102,10,0,
-                    WS_EX_RIGHT
+    GROUPBOX        "Deinterlace Type",IDS_STATIC,6,78,208,38
+    CONTROL         "Type 3",IDC_TYPE3,"Button",BS_AUTORADIOBUTTON,135,88,41,
+                    12
+    CONTROL         "Blended Clipping",IDC_TYPE2,"Button",BS_AUTORADIOBUTTON,
+                    61,100,69,12
+    CONTROL         "Two Frame",IDC_TYPE1,"Button",BS_AUTORADIOBUTTON,61,88,
+                    52,12
+    CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,13,100,41,12
+    CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,13,88,44,
+                    12
+    LTEXT           "Deinterlace DirectShow Filter",IDS_STATIC,68,0,94,10
+    CTEXT           "Copyright (c) 2000-01 John Adcock, Peter Gubanov",
+                    IDS_STATIC,27,9,177,10,0,WS_EX_RIGHT
     LTEXT           "Deinterlace comes with ABSOLUTELY NO WARRANTY.  This software in licenced under the terms of the GNU GPL for details see http://www.fsf.net/copyleft/gpl.html",
-                    IDS_STATIC,73,36,124,44
+                    IDS_STATIC,1,20,220,25
     LTEXT           "The Sourceforge project page for this project is http://deinterlace.sourceforge.net/",
-                    IDS_STATIC,73,81,124,26
+                    IDS_STATIC,0,49,220,17
 END
 
 
@@ -134,7 +134,8 @@ GUIDELINES DESIGNINFO DISCARDABLE
 BEGIN
     IDD_DEINTERLACEPROP, DIALOG
     BEGIN
-        RIGHTMARGIN, 197
+        RIGHTMARGIN, 228
+        BOTTOMMARGIN, 125
     END
 END
 #endif    // APSTUDIO_INVOKED

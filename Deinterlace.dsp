@@ -117,36 +117,38 @@ SOURCE="$(InputPath)"
 SOURCE=.\CPU.cpp
 DEP_CPP_CPU_C=\
 	".\cpu.h"\
-	{$(INCLUDE)}"amextra.h"\
-	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"cache.h"\
-	{$(INCLUDE)}"combase.h"\
-	{$(INCLUDE)}"cprop.h"\
-	{$(INCLUDE)}"ctlutil.h"\
-	{$(INCLUDE)}"dllsetup.h"\
-	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"measure.h"\
-	{$(INCLUDE)}"msgthrd.h"\
-	{$(INCLUDE)}"mtype.h"\
-	{$(INCLUDE)}"outputq.h"\
-	{$(INCLUDE)}"pstream.h"\
-	{$(INCLUDE)}"refclock.h"\
-	{$(INCLUDE)}"reftime.h"\
-	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"Schedule.h"\
-	{$(INCLUDE)}"source.h"\
-	{$(INCLUDE)}"streams.h"\
-	{$(INCLUDE)}"strmctl.h"\
-	{$(INCLUDE)}"sysclock.h"\
-	{$(INCLUDE)}"transfrm.h"\
-	{$(INCLUDE)}"transip.h"\
-	{$(INCLUDE)}"videoctl.h"\
-	{$(INCLUDE)}"vtrans.h"\
-	{$(INCLUDE)}"winctrl.h"\
-	{$(INCLUDE)}"winutil.h"\
-	{$(INCLUDE)}"wxdebug.h"\
-	{$(INCLUDE)}"wxlist.h"\
-	{$(INCLUDE)}"wxutil.h"\
+	
+NODEP_CPP_CPU_C=\
+	".\ache.h"\
+	".\chedule.h"\
+	".\easure.h"\
+	".\efclock.h"\
+	".\eftime.h"\
+	".\enbase.h"\
+	".\ideoctl.h"\
+	".\inctrl.h"\
+	".\inutil.h"\
+	".\llsetup.h"\
+	".\mextra.h"\
+	".\mfilter.h"\
+	".\ombase.h"\
+	".\ourcc.h"\
+	".\ource.h"\
+	".\prop.h"\
+	".\ransfrm.h"\
+	".\ransip.h"\
+	".\sgthrd.h"\
+	".\stream.h"\
+	".\tlutil.h"\
+	".\trans.h"\
+	".\treams.h"\
+	".\trmctl.h"\
+	".\type.h"\
+	".\utputq.h"\
+	".\xdebug.h"\
+	".\xlist.h"\
+	".\xutil.h"\
+	".\ysclock.h"\
 	
 # End Source File
 # Begin Source File
@@ -158,36 +160,38 @@ DEP_CPP_DEINT=\
 	".\DeinterlaceProperties.h"\
 	".\DI.h"\
 	".\IDeinterlace.h"\
-	{$(INCLUDE)}"amextra.h"\
-	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"cache.h"\
-	{$(INCLUDE)}"combase.h"\
-	{$(INCLUDE)}"cprop.h"\
-	{$(INCLUDE)}"ctlutil.h"\
-	{$(INCLUDE)}"dllsetup.h"\
-	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"measure.h"\
-	{$(INCLUDE)}"msgthrd.h"\
-	{$(INCLUDE)}"mtype.h"\
-	{$(INCLUDE)}"outputq.h"\
-	{$(INCLUDE)}"pstream.h"\
-	{$(INCLUDE)}"refclock.h"\
-	{$(INCLUDE)}"reftime.h"\
-	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"Schedule.h"\
-	{$(INCLUDE)}"source.h"\
-	{$(INCLUDE)}"streams.h"\
-	{$(INCLUDE)}"strmctl.h"\
-	{$(INCLUDE)}"sysclock.h"\
-	{$(INCLUDE)}"transfrm.h"\
-	{$(INCLUDE)}"transip.h"\
-	{$(INCLUDE)}"videoctl.h"\
-	{$(INCLUDE)}"vtrans.h"\
-	{$(INCLUDE)}"winctrl.h"\
-	{$(INCLUDE)}"winutil.h"\
-	{$(INCLUDE)}"wxdebug.h"\
-	{$(INCLUDE)}"wxlist.h"\
-	{$(INCLUDE)}"wxutil.h"\
+	
+NODEP_CPP_DEINT=\
+	".\ache.h"\
+	".\chedule.h"\
+	".\easure.h"\
+	".\efclock.h"\
+	".\eftime.h"\
+	".\enbase.h"\
+	".\ideoctl.h"\
+	".\inctrl.h"\
+	".\inutil.h"\
+	".\llsetup.h"\
+	".\mextra.h"\
+	".\mfilter.h"\
+	".\ombase.h"\
+	".\ourcc.h"\
+	".\ource.h"\
+	".\prop.h"\
+	".\ransfrm.h"\
+	".\ransip.h"\
+	".\sgthrd.h"\
+	".\stream.h"\
+	".\tlutil.h"\
+	".\trans.h"\
+	".\treams.h"\
+	".\trmctl.h"\
+	".\type.h"\
+	".\utputq.h"\
+	".\xdebug.h"\
+	".\xlist.h"\
+	".\xutil.h"\
+	".\ysclock.h"\
 	
 # End Source File
 # Begin Source File
@@ -198,37 +202,47 @@ DEP_CPP_DEINTE=\
 	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
 	".\IDeinterlace.h"\
-	{$(INCLUDE)}"amextra.h"\
-	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"cache.h"\
-	{$(INCLUDE)}"combase.h"\
-	{$(INCLUDE)}"cprop.h"\
-	{$(INCLUDE)}"ctlutil.h"\
-	{$(INCLUDE)}"dllsetup.h"\
-	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"measure.h"\
-	{$(INCLUDE)}"msgthrd.h"\
-	{$(INCLUDE)}"mtype.h"\
-	{$(INCLUDE)}"outputq.h"\
-	{$(INCLUDE)}"pstream.h"\
-	{$(INCLUDE)}"refclock.h"\
-	{$(INCLUDE)}"reftime.h"\
-	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"Schedule.h"\
-	{$(INCLUDE)}"source.h"\
-	{$(INCLUDE)}"streams.h"\
-	{$(INCLUDE)}"strmctl.h"\
-	{$(INCLUDE)}"sysclock.h"\
-	{$(INCLUDE)}"transfrm.h"\
-	{$(INCLUDE)}"transip.h"\
-	{$(INCLUDE)}"videoctl.h"\
-	{$(INCLUDE)}"vtrans.h"\
-	{$(INCLUDE)}"winctrl.h"\
-	{$(INCLUDE)}"winutil.h"\
-	{$(INCLUDE)}"wxdebug.h"\
-	{$(INCLUDE)}"wxlist.h"\
-	{$(INCLUDE)}"wxutil.h"\
 	
+NODEP_CPP_DEINTE=\
+	".\ache.h"\
+	".\chedule.h"\
+	".\easure.h"\
+	".\efclock.h"\
+	".\eftime.h"\
+	".\enbase.h"\
+	".\ideoctl.h"\
+	".\inctrl.h"\
+	".\inutil.h"\
+	".\llsetup.h"\
+	".\mextra.h"\
+	".\mfilter.h"\
+	".\ombase.h"\
+	".\ourcc.h"\
+	".\ource.h"\
+	".\prop.h"\
+	".\ransfrm.h"\
+	".\ransip.h"\
+	".\sgthrd.h"\
+	".\stream.h"\
+	".\tlutil.h"\
+	".\trans.h"\
+	".\treams.h"\
+	".\trmctl.h"\
+	".\type.h"\
+	".\utputq.h"\
+	".\xdebug.h"\
+	".\xlist.h"\
+	".\xutil.h"\
+	".\ysclock.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=.\DI_BlendedClip.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DI_BobAndWeave.cpp
 # End Source File
 # Begin Source File
 
@@ -236,36 +250,38 @@ SOURCE=.\DI_TwoFrame.cpp
 DEP_CPP_DI_TW=\
 	".\cpu.h"\
 	".\DI.h"\
-	{$(INCLUDE)}"amextra.h"\
-	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"cache.h"\
-	{$(INCLUDE)}"combase.h"\
-	{$(INCLUDE)}"cprop.h"\
-	{$(INCLUDE)}"ctlutil.h"\
-	{$(INCLUDE)}"dllsetup.h"\
-	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"measure.h"\
-	{$(INCLUDE)}"msgthrd.h"\
-	{$(INCLUDE)}"mtype.h"\
-	{$(INCLUDE)}"outputq.h"\
-	{$(INCLUDE)}"pstream.h"\
-	{$(INCLUDE)}"refclock.h"\
-	{$(INCLUDE)}"reftime.h"\
-	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"Schedule.h"\
-	{$(INCLUDE)}"source.h"\
-	{$(INCLUDE)}"streams.h"\
-	{$(INCLUDE)}"strmctl.h"\
-	{$(INCLUDE)}"sysclock.h"\
-	{$(INCLUDE)}"transfrm.h"\
-	{$(INCLUDE)}"transip.h"\
-	{$(INCLUDE)}"videoctl.h"\
-	{$(INCLUDE)}"vtrans.h"\
-	{$(INCLUDE)}"winctrl.h"\
-	{$(INCLUDE)}"winutil.h"\
-	{$(INCLUDE)}"wxdebug.h"\
-	{$(INCLUDE)}"wxlist.h"\
-	{$(INCLUDE)}"wxutil.h"\
+	
+NODEP_CPP_DI_TW=\
+	".\ache.h"\
+	".\chedule.h"\
+	".\easure.h"\
+	".\efclock.h"\
+	".\eftime.h"\
+	".\enbase.h"\
+	".\ideoctl.h"\
+	".\inctrl.h"\
+	".\inutil.h"\
+	".\llsetup.h"\
+	".\mextra.h"\
+	".\mfilter.h"\
+	".\ombase.h"\
+	".\ourcc.h"\
+	".\ource.h"\
+	".\prop.h"\
+	".\ransfrm.h"\
+	".\ransip.h"\
+	".\sgthrd.h"\
+	".\stream.h"\
+	".\tlutil.h"\
+	".\trans.h"\
+	".\treams.h"\
+	".\trmctl.h"\
+	".\type.h"\
+	".\utputq.h"\
+	".\xdebug.h"\
+	".\xlist.h"\
+	".\xutil.h"\
+	".\ysclock.h"\
 	
 # End Source File
 # End Group
