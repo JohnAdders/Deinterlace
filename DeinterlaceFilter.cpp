@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.8 2001-12-11 17:31:58 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.9 2001-12-11 20:11:53 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,12 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2001/12/11 17:31:58  adcockj
+// Added new GUIDs to avoid clash with hauppauge version
+// Fixed breaking of COM interface rules by adding IDeinterlace2
+// Added new setting to control Refresh rate doubling
+// Test of code to allow deinterlacing even if we get very little history
+//
 // Revision 1.7  2001/11/28 09:45:56  pgubanov
 // Fix: we have to update overlay pitch every time we are notified of output format change. John, setting up m_Info in StartStreaming() is not enough - take care of dynamic changes!
 //
@@ -210,6 +216,11 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     /////////////////////////////////////////////////////////
     memset(&m_Info, 0, sizeof(m_Info));
 
+    for (i = 0; i < 4; ++i) 
+    {
+		m_Info.PictureHistory[i] = m_Pictures + i;
+    }
+
     // Get input BITMAPINFOHEADER
     LPBITMAPINFOHEADER pbiIn;
     if (IsEqualGUID(*m_pInput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) 
@@ -226,7 +237,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     m_Info.FrameWidth = pbiIn->biWidth;
     m_Info.FrameHeight = pbiIn->biHeight;
     m_Info.FieldHeight = pbiIn->biHeight / 2;
-    m_Info.InputPitch = pbiIn->biSizeImage / pbiIn->biHeight / 2;
+    m_Info.InputPitch = pbiIn->biSizeImage / pbiIn->biHeight * 2;
     if (m_Info.FieldHeight > MAX_INPUT_LINES_PER_FIELD) 
     {
         m_Info.FieldHeight = MAX_INPUT_LINES_PER_FIELD;
@@ -484,7 +495,7 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
             m_pInputHistory[i - 1] = m_pInputHistory[i];
         }
     }
-    m_pInputHistory[MAX_FRAMES_IN_HISTORY - 1] = pSource;
+    //m_pInputHistory[MAX_FRAMES_IN_HISTORY - 1] = pSource;
     m_LastStop = rtStop;
 
     pSource->GetPointer(&pSourceBuffer);
@@ -492,20 +503,20 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     AM_SAMPLE2_PROPERTIES*  const pProps = m_pInput->SampleProps();
 
 
-    for (i=3; i > 1; --i) 
+    for (i=3; i > 0; --i) 
     {
-        memcpy(&m_Pictures[i], &m_Pictures[i], sizeof(TPicture));
+        memcpy(&m_Pictures[i], &m_Pictures[i - 1], sizeof(TPicture));
     }
     
     if(m_bIsOddFieldFirst)
     {
-        m_Pictures[i].pData = pSourceBuffer + m_Info.InputPitch / 2;
-        m_Pictures[i].Flags = PICTURE_INTERLACED_ODD;
+        m_Pictures[0].pData = pSourceBuffer + m_Info.InputPitch / 2;
+        m_Pictures[0].Flags = PICTURE_INTERLACED_ODD;
     }
     else
     {
-        m_Pictures[i].pData = pSourceBuffer;
-        m_Pictures[i].Flags = PICTURE_INTERLACED_EVEN;
+        m_Pictures[0].pData = pSourceBuffer;
+        m_Pictures[0].Flags = PICTURE_INTERLACED_EVEN;
     }
     ++m_History;
 
@@ -562,20 +573,20 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
 
     m_Info.Overlay = pDestBuffer;
 
-    for (i=3; i > 1; --i) 
+    for (i = 3; i > 0; --i) 
     {
-        memcpy(&m_Pictures[i], &m_Pictures[i], sizeof(TPicture));
+        memcpy(&m_Pictures[i], &m_Pictures[i - 1], sizeof(TPicture));
     }
     
     if(m_bIsOddFieldFirst)
     {
-        m_Pictures[i].pData = pSourceBuffer;
-        m_Pictures[i].Flags = PICTURE_INTERLACED_EVEN;
+        m_Pictures[0].pData = pSourceBuffer;
+        m_Pictures[0].Flags = PICTURE_INTERLACED_EVEN;
     }
     else
     {
-        m_Pictures[i].pData = pSourceBuffer + m_Info.InputPitch / 2;
-        m_Pictures[i].Flags = PICTURE_INTERLACED_ODD;
+        m_Pictures[0].pData = pSourceBuffer + m_Info.InputPitch / 2;
+        m_Pictures[0].Flags = PICTURE_INTERLACED_ODD;
     }
     ++m_History;
 
