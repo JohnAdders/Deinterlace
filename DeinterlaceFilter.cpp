@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.3 2001-11-14 13:32:05 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.4 2001-11-14 13:42:22 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/11/14 13:32:05  adcockj
+// Moved COM definitions into IDL
+//
 // Revision 1.2  2001/11/14 08:03:42  adcockj
 // Fixed alignment problems
 //
@@ -53,7 +56,6 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "DeinterlaceGuids.h"
 #include "DeinterlaceInputPin.h"
 #include "DeinterlaceFilter.h"
 #include "CPU.h"

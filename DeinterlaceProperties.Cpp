@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceProperties.Cpp,v 1.3 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DeinterlaceProperties.Cpp,v 1.4 2001-11-14 13:42:22 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/11/13 13:51:43  adcockj
+// Tidy up code and made to mostly conform to coding standards
+// Changed history behaviour
+// Made to use DEINTERLACE_INFO throughout
+//
 // Revision 1.2  2001/11/01 11:04:19  adcockj
 // Updated headers
 // Checked in changes by Micheal Eskin and Hauppauge
@@ -44,8 +49,6 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "DeinterlaceGuids.h"
-#include "IDeinterlace.h"
 #include "DeinterlaceProperties.h"
 #include "Deinterlace.h"
 
