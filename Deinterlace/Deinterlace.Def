@@ -1,9 +1,0 @@
-LIBRARY		Deinterlace.ax
-DESCRIPTION	'Deinterlace filter'
-EXPORTS
-
-DllGetClassObject PRIVATE
-DllCanUnloadNow PRIVATE
-DllRegisterServer PRIVATE
-DllUnregisterServer PRIVATE
-
