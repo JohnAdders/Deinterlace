@@ -81,9 +81,9 @@ STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
     CTEXT           "Deinterlace DirectShow Filter",-1,0,0,230,10
-    CTEXT           "Copyright (c) 2000-01 John Adcock, Peter Gubanov, Tom Barry, Steve Grimm, Mark Rejhon, Michael Eskin",
+    CTEXT           "Copyright (c) 2000-02 John Adcock, Peter Gubanov, Tom Barry, Steve Grimm, Mark Rejhon, Michael Eskin",
                     -1,5,12,225,21
-    LTEXT           "Deinterlace.ax comes with ABSOLUTELY NO WARRANTY.  This software in licenced under the terms of the GNU GPL for details see http://www.fsf.net/copyleft/gpl.html",
+    LTEXT           "Deinterlace.ax comes with ABSOLUTELY NO WARRANTY.  This software is licenced under the terms of the GNU LGPL. See http://www.fsf.org/licenses/lgpl.html for details.",
                     -1,1,32,220,25
     LTEXT           "The home page for this project is http://www.dscaler.org/",
                     -1,0,60,220,11
