@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DS_plugin.h,v 1.2 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DI_Plugin.h,v 1.1 2001-11-14 16:42:18 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // A generic DScaler Deinterlace plugin wrapper class
 /////////////////////////////////////////////////////////////////////////////
@@ -29,43 +29,25 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef _DS_PLUGIN_H
-#define _DS_PLUGIN_H
+#ifndef __DI_PLUGIN_H__
+#define __DI_PLUGIN_H__
 
 #include "DI.h"
 
-//
-// Define basic interface for generic DScaler plugin
-//
-class DGenericDSPlugin 
+class CDeinterlacePlugin : public CCritSec 
 {
 public:
-	virtual ~DGenericDSPlugin() 
-    {};
-	virtual void startStreaming() = NULL;
-	virtual void process(DEINTERLACE_INFO *Info) = NULL;
-	virtual void stopStreaming() = NULL;
-	virtual void showSettingsDialog(HWND hwnd) = NULL;
-};
+	CDeinterlacePlugin(LPCSTR PluginName);
+	~CDeinterlacePlugin();
 
-//
-// GreedyH Implementation
-//
-class DDeinterlaceGreedyH : public DGenericDSPlugin, public CCritSec 
-{
-public:
-	DDeinterlaceGreedyH();
-	~DDeinterlaceGreedyH();
-
-	void startStreaming();
-	void process(DEINTERLACE_INFO *Info);
-	void stopStreaming();
-	void showSettingsDialog(HWND hwnd);
+	void StartStreaming();
+	void Process(DEINTERLACE_INFO *Info);
+	void StopStreaming();
+	void ShowSettingsDialog(HWND hwnd);
 private:
 	HMODULE	m_hModule;
 	DEINTERLACE_METHOD* m_pMethod;
 	BOOL m_fStreaming;
-
 };
 
 #endif _DS_PLUGIN_H

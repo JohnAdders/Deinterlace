@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.4 2001-11-14 13:42:22 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.5 2001-11-14 16:42:18 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2001/11/14 13:42:22  adcockj
+// Fixed compile errors
+//
 // Revision 1.3  2001/11/14 13:32:05  adcockj
 // Moved COM definitions into IDL
 //
@@ -61,22 +64,22 @@
 #include "CPU.h"
 #include "memcpy.h"
 #include "resource.h"
-
-#include "DS_plugin.h"
+#include "DI_Plugin.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CDeinterlaceFilter Constructor
 /////////////////////////////////////////////////////////////////////////////
 
 //Tee changed IDC_WEAVE to IDC_TYPE1 Two Frame 
-CDeinterlaceFilter::CDeinterlaceFilter(TCHAR *tszName, LPUNKNOWN punk, HRESULT *phr) :
+CDeinterlaceFilter::CDeinterlaceFilter(TCHAR* tszName, LPUNKNOWN punk, HRESULT* phr) :
     CTransformFilter(tszName, punk, CLSID_Deinterlace),
     m_DeinterlaceType(IDC_TYPE1),
     CPersistStream(punk, phr),
-    m_pDeinterlacePlugin(NULL)
+    m_pDeinterlacePlugin(NULL),
+    m_bIsOddFieldFirst(TRUE),
+    m_History(0)
 {
     memset(&m_Info, 0, sizeof(m_Info));
-    m_History = 0;
 }
 
 
@@ -84,7 +87,7 @@ CDeinterlaceFilter::CDeinterlaceFilter(TCHAR *tszName, LPUNKNOWN punk, HRESULT *
 // CreateInstance
 // Provide the way for COM to create a Deinterlace object
 /////////////////////////////////////////////////////////////////////////////
-CUnknown *CDeinterlaceFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
+CUnknown* CDeinterlaceFilter::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
 {
 
 #ifdef  _DEBUG
@@ -93,10 +96,10 @@ CUnknown *CDeinterlaceFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 //    __asm int 3
 #endif
 
-    CDeinterlaceFilter *pNewObject = new CDeinterlaceFilter(NAME("Deinterlace Filter"), punk, phr);
+    CDeinterlaceFilter* pNewObject = new CDeinterlaceFilter(NAME("Deinterlace Filter"), punk, phr);
     if (pNewObject == NULL)
     {
-        *phr = E_OUTOFMEMORY;
+       *phr = E_OUTOFMEMORY;
     }
     return pNewObject;
 }
@@ -171,10 +174,21 @@ HRESULT CDeinterlaceFilter::StartStreaming()
         m_pInputHistory[i] = NULL;
     }
 
-    m_pDeinterlacePlugin = new DDeinterlaceGreedyH();
-    if (m_pDeinterlacePlugin)
+    if(m_DeinterlaceType == IDC_TYPE4 && m_PlugInName != NULL)
     {
-        m_pDeinterlacePlugin->startStreaming();
+        // convert BSTR to a char string so that we
+        // can use it to load plugin on all
+        // platforms
+        char DllName[MAX_PATH];
+        wchar_t* pInStr = m_PlugInName;
+        char* pOutStr = DllName;
+        while(*(pOutStr++) = (char)(*pInStr++));
+
+        m_pDeinterlacePlugin = new CDeinterlacePlugin(DllName);
+        if (m_pDeinterlacePlugin)
+        {
+            m_pDeinterlacePlugin->StartStreaming();
+        }
     }
 
     /////////////////////////////////////////////////////////
@@ -188,11 +202,11 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     LPBITMAPINFOHEADER pbiIn;
     if (IsEqualGUID(*m_pInput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) 
     {
-        pbiIn = &(((VIDEOINFOHEADER *)m_pInput->CurrentMediaType().Format())->bmiHeader);
+        pbiIn = &(((VIDEOINFOHEADER*)m_pInput->CurrentMediaType().Format())->bmiHeader);
     }
     else if (IsEqualGUID(*m_pInput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) 
     {
-        pbiIn = &(((VIDEOINFOHEADER2 *)m_pInput->CurrentMediaType().Format())->bmiHeader);
+        pbiIn = &(((VIDEOINFOHEADER2*)m_pInput->CurrentMediaType().Format())->bmiHeader);
     }
 
     // Generate output buffer pointers
@@ -209,11 +223,11 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     LPBITMAPINFOHEADER pbiOut;
     if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) 
     {
-        pbiOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->bmiHeader);
+        pbiOut = &(((VIDEOINFOHEADER*)m_pOutput->CurrentMediaType().Format())->bmiHeader);
     }
     else if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) 
     {
-        pbiOut = &(((VIDEOINFOHEADER2 *)m_pOutput->CurrentMediaType().Format())->bmiHeader);
+        pbiOut = &(((VIDEOINFOHEADER2*)m_pOutput->CurrentMediaType().Format())->bmiHeader);
     }
     m_Info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
 
@@ -254,7 +268,7 @@ HRESULT CDeinterlaceFilter::StopStreaming()
 
     if (m_pDeinterlacePlugin) 
     {
-        m_pDeinterlacePlugin->stopStreaming();
+        m_pDeinterlacePlugin->StopStreaming();
         delete m_pDeinterlacePlugin;
         m_pDeinterlacePlugin = NULL;
     }
@@ -266,21 +280,21 @@ HRESULT CDeinterlaceFilter::StopStreaming()
 // NonDelegatingQueryInterface
 // Reveals IDeinterlace, ISpecifyPropertyPages, IPersistStream
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlaceFilter::NonDelegatingQueryInterface(REFIID riid, void **ppv)
+STDMETHODIMP CDeinterlaceFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
     CheckPointer(ppv,E_POINTER);
 
     if (riid == IID_IDeinterlace)
     {
-        return GetInterface((IDeinterlace *) this, ppv);
+        return GetInterface((IDeinterlace*) this, ppv);
     }
     else if (riid == IID_ISpecifyPropertyPages)
     {
-        return GetInterface((ISpecifyPropertyPages *) this, ppv);
+        return GetInterface((ISpecifyPropertyPages*) this, ppv);
     }
     else if (riid == IID_IPersistStream)
     {
-        return GetInterface((IPersistStream *) this, ppv);
+        return GetInterface((IPersistStream*) this, ppv);
     }
     else
     {
@@ -304,12 +318,12 @@ long SpatialTolerance = 600;
 long SimilarityThreshold = 25;
 
 // Set up our output sample
-HRESULT CDeinterlaceFilter::getOutputSampleBuffer(IMediaSample *pSample, IMediaSample **ppOutput)
+HRESULT CDeinterlaceFilter::GetOutputSampleBuffer(IMediaSample* pSample, IMediaSample** ppOutput)
 {
-    IMediaSample *pOutSample;
+    IMediaSample* pOutSample;
 
     // default - times are the same
-    AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+    AM_SAMPLE2_PROPERTIES*  const pProps = m_pInput->SampleProps();
     DWORD dwFlags = m_bSampleSkipped ? AM_GBF_PREVFRAMESKIPPED : 0;
 
     // This will prevent the image renderer from switching us to DirectDraw
@@ -326,10 +340,10 @@ HRESULT CDeinterlaceFilter::getOutputSampleBuffer(IMediaSample *pSample, IMediaS
         pProps->dwSampleFlags & AM_SAMPLE_STOPVALID ? &pProps->tStop : NULL,
         dwFlags);
 
-    *ppOutput = pOutSample;
+   * ppOutput = pOutSample;
     if (FAILED(hr)) 
     {
-        *ppOutput = NULL;
+       * ppOutput = NULL;
         return hr;
     }
 
@@ -341,7 +355,7 @@ HRESULT CDeinterlaceFilter::getOutputSampleBuffer(IMediaSample *pSample, IMediaS
     // Since we accept only YUY2, we primarily take care of
     // the former.
     //
-    AM_MEDIA_TYPE *pmt;
+    AM_MEDIA_TYPE* pmt;
     pOutSample->GetMediaType(&pmt);
     if (pmt != NULL) 
     {
@@ -407,12 +421,12 @@ HRESULT CDeinterlaceFilter::getOutputSampleBuffer(IMediaSample *pSample, IMediaS
 //
 // Process input samples
 //
-HRESULT CDeinterlaceFilter::Receive(IMediaSample *pSample)
+HRESULT CDeinterlaceFilter::Receive(IMediaSample* pSample)
 {
     //
     // Check for other streams and pass them on
     //
-    AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+    AM_SAMPLE2_PROPERTIES*  const pProps = m_pInput->SampleProps();
     if (pProps->dwStreamId != AM_STREAM_MEDIA) 
     {
         return m_pOutput->Deliver(pSample);
@@ -424,7 +438,7 @@ HRESULT CDeinterlaceFilter::Receive(IMediaSample *pSample)
     ASSERT(m_pOutput != NULL);
 
     // Process input sample and deliver output sample(s)
-    hr = deinterlace(pSample);
+    hr = Deinterlace(pSample);
 
     return hr;
 }
@@ -432,7 +446,7 @@ HRESULT CDeinterlaceFilter::Receive(IMediaSample *pSample)
 //
 // Deinterlace input frames/fields and generate output samples
 //
-HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
+HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
 {
     CAutoLock l(&m_DeinterlaceLock);
     int i;
@@ -470,18 +484,9 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
 
     pSource->GetPointer(&pSourceBuffer);
     
-    AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+    AM_SAMPLE2_PROPERTIES*  const pProps = m_pInput->SampleProps();
 
-    if(!(pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST))
-    {
-        for (i=0;i<m_Info.FieldHeight;i++) 
-        {
-            m_EvenLines[1][i] = m_EvenLines[0][i];
-            m_EvenLines[0][i] = (short*)(pSourceBuffer+(2*i)*m_Info.LineLength);
-        }
-        m_Info.IsOdd = FALSE;
-    }
-    else
+    if(m_bIsOddFieldFirst)
     {
         for (i=0;i<m_Info.FieldHeight;i++) 
         {
@@ -489,6 +494,15 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
             m_OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*m_Info.LineLength);
         }
         m_Info.IsOdd = TRUE;
+    }
+    else
+    {
+        for (i=0;i<m_Info.FieldHeight;i++) 
+        {
+            m_EvenLines[1][i] = m_EvenLines[0][i];
+            m_EvenLines[0][i] = (short*)(pSourceBuffer+(2*i)*m_Info.LineLength);
+        }
+        m_Info.IsOdd = FALSE;
     }
     ++m_History;
 
@@ -502,20 +516,20 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
     // Generate first field
     IMediaSample* pDest;
 
-    HRESULT hr = getOutputSampleBuffer(pSource,&pDest);
+    HRESULT hr = GetOutputSampleBuffer(pSource,&pDest);
     if (FAILED(hr))
     {
         return NOERROR;
     }
 
-    BYTE *pDestBuffer;
+    BYTE* pDestBuffer;
     pDest->GetPointer(&pDestBuffer);
 
     m_Info.Overlay = pDestBuffer;
 
     if(m_History > 3)
     {
-        callDeinterlaceMethod(&m_Info);
+        CallDeinterlaceMethod(&m_Info);
     }
     else
     {
@@ -533,7 +547,7 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
     //
     // Generate second field
     //
-    hr = getOutputSampleBuffer(pSource,&pDest);
+    hr = GetOutputSampleBuffer(pSource,&pDest);
     if (FAILED(hr))
         return NOERROR;
 
@@ -541,16 +555,7 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
 
     m_Info.Overlay = pDestBuffer;
 
-    if(!(pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST))
-    {
-        for (i=0;i<m_Info.FieldHeight;i++) 
-        {
-            m_OddLines[1][i] = m_OddLines[0][i];
-            m_OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*m_Info.LineLength);
-        }
-        m_Info.IsOdd = TRUE;
-    }
-    else
+    if(m_bIsOddFieldFirst)
     {
         for (i=0;i<m_Info.FieldHeight;i++) 
         {
@@ -559,11 +564,20 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
         }
         m_Info.IsOdd = FALSE;
     }
+    else
+    {
+        for (i=0;i<m_Info.FieldHeight;i++) 
+        {
+            m_OddLines[1][i] = m_OddLines[0][i];
+            m_OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*m_Info.LineLength);
+        }
+        m_Info.IsOdd = TRUE;
+    }
     ++m_History;
 
     if(m_History > 3)
     {
-        callDeinterlaceMethod(&m_Info);
+        CallDeinterlaceMethod(&m_Info);
     }
     else
     {
@@ -583,7 +597,7 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
 //
 // Call apropriate deinterlace method
 //
-void CDeinterlaceFilter::callDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
+void CDeinterlaceFilter::CallDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
 {
     switch (m_DeinterlaceType) 
     {
@@ -595,7 +609,7 @@ void CDeinterlaceFilter::callDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
         DeinterlaceFieldBob(pInfo);
         break;
     case IDC_TYPE1:
-        m_pDeinterlacePlugin->process(pInfo);
+        DeinterlaceFieldTwoFrame(pInfo);
         break;
     case IDC_TYPE2:
         BlendedClipping(pInfo);
@@ -603,6 +617,9 @@ void CDeinterlaceFilter::callDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
         break;
     case IDC_TYPE3:
         DeinterlaceFieldBob(pInfo);
+        break;
+    case IDC_TYPE4:
+        m_pDeinterlacePlugin->Process(pInfo);
         break;
     }
 }
@@ -612,7 +629,7 @@ void CDeinterlaceFilter::callDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
 // Make destination properties the same as source
 /////////////////////////////////////////////////////////////////////////////
 #if 0
-HRESULT CDeinterlaceFilter::CopyProperties(IMediaSample *pSource, IMediaSample *pDest) const
+HRESULT CDeinterlaceFilter::CopyProperties(IMediaSample* pSource, IMediaSample* pDest) const
 {
     // Copy the sample times
 
@@ -647,7 +664,7 @@ HRESULT CDeinterlaceFilter::CopyProperties(IMediaSample *pSource, IMediaSample *
 
     // Copy the media type
 
-    AM_MEDIA_TYPE *pMediaType;
+    AM_MEDIA_TYPE* pMediaType;
     pSource->GetMediaType(&pMediaType);
     pDest->SetMediaType(pMediaType);
     DeleteMediaType(pMediaType);
@@ -698,7 +715,7 @@ HRESULT CDeinterlaceFilter::CopyProperties(IMediaSample *pSource, IMediaSample *
 // CheckInputType
 // Check the input type is OK - return an error otherwise
 /////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::CheckInputType(const CMediaType *mtIn)
+HRESULT CDeinterlaceFilter::CheckInputType(const CMediaType* mtIn)
 {
     // check this is a VIDEOINFOHEADER type 
     // MAE Added VideoInfo back in
@@ -721,7 +738,7 @@ HRESULT CDeinterlaceFilter::CheckInputType(const CMediaType *mtIn)
 // CheckTransform
 // Check a transform can be done between these formats
 /////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::CheckTransform(const CMediaType *pmtIn, const CMediaType *pmtOut)
+HRESULT CDeinterlaceFilter::CheckTransform(const CMediaType* pmtIn, const CMediaType* pmtOut)
 {
     DbgLog((LOG_TRACE, 2, TEXT("CDeinterlaceFilter::CheckTransform")));
 
@@ -747,8 +764,8 @@ HRESULT CDeinterlaceFilter::CheckTransform(const CMediaType *pmtIn, const CMedia
     // First check that there is a non empty target rectangle.
 
     // Since we need only rectangles here, skip VIDEOINFOHEADER 2 cheking
-    VIDEOINFO *videoInfo = (VIDEOINFO *)pmtOut->pbFormat;
-    VIDEOINFO *videoInfoIn = (VIDEOINFO *)pmtIn->pbFormat;
+    VIDEOINFO* videoInfo = (VIDEOINFO*)pmtOut->pbFormat;
+    VIDEOINFO* videoInfoIn = (VIDEOINFO*)pmtIn->pbFormat;
     if (!IsRectEmpty(&videoInfo->rcTarget)) 
     {
         // Next, check that the source rectangle is the entire movie.
@@ -787,7 +804,7 @@ HRESULT CDeinterlaceFilter::CheckTransform(const CMediaType *pmtIn, const CMedia
 // Tell the output pin's allocator what size buffers we
 // require. Can only do this when the input is connected
 /////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIES *pProperties)
+HRESULT CDeinterlaceFilter::DecideBufferSize(IMemAllocator* pAlloc,ALLOCATOR_PROPERTIES* pProperties)
 {
     // Is the input pin connected
     if (m_pInput->IsConnected() == FALSE)
@@ -853,7 +870,7 @@ HRESULT CDeinterlaceFilter::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PRO
 // I support one type, namely the type of the input pin
 // This type is only available if my input is connected
 /////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
+HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType* pMediaType)
 {
     // Is the input pin connected
     if (m_pInput->IsConnected() == FALSE)
@@ -879,7 +896,7 @@ HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
 
     if(IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) 
     {
-        VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *)cmt.Format();
+        VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)cmt.Format();
         // we output 2 samples for each incoming sample
         pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
         pvi->dwBitRate = pvi->dwBitRate*2;
@@ -887,7 +904,7 @@ HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
     }
     else if(IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) 
     {
-        VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *)cmt.Format();
+        VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)cmt.Format();
         // we output 2 samples for each incoming sample
         pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
         pvi->dwBitRate = pvi->dwBitRate*2;
@@ -904,13 +921,13 @@ HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
 // CanPerformDeinterlace
 // Check if this is one of out supported formats and data has 24 bits
 /////////////////////////////////////////////////////////////////////////////
-BOOL CDeinterlaceFilter::CanPerformDeinterlace(const CMediaType *pMediaType) const
+BOOL CDeinterlaceFilter::CanPerformDeinterlace(const CMediaType* pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
     {
         if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VIDEOINFO2)) 
         {
-            VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *)pMediaType->Format();
+            VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)pMediaType->Format();
 
             // Commented out for now - sometimes IsInterlaced is not set on interlaced material
             //
@@ -930,11 +947,11 @@ BOOL CDeinterlaceFilter::CanPerformDeinterlace(const CMediaType *pMediaType) con
         LPBITMAPINFOHEADER pbi;
         if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VideoInfo)) 
         {
-            pbi = &(((VIDEOINFOHEADER *)pMediaType->Format())->bmiHeader);
+            pbi = &(((VIDEOINFOHEADER*)pMediaType->Format())->bmiHeader);
         }
         else if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VIDEOINFO2)) 
         {
-            pbi = &(((VIDEOINFOHEADER2 *)pMediaType->Format())->bmiHeader);
+            pbi = &(((VIDEOINFOHEADER2*)pMediaType->Format())->bmiHeader);
         }
 
         // Some deinterlace routines assume the input is YUY2
@@ -961,7 +978,7 @@ BOOL CDeinterlaceFilter::CanPerformDeinterlace(const CMediaType *pMediaType) con
 // GetClassID
 // This is the only method of IPersist
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlaceFilter::GetClassID(CLSID *pClsid)
+STDMETHODIMP CDeinterlaceFilter::GetClassID(CLSID* pClsid)
 {
     return CBaseFilter::GetClassID(pClsid);
 }
@@ -971,9 +988,13 @@ STDMETHODIMP CDeinterlaceFilter::GetClassID(CLSID *pClsid)
 // ScribbleToStream
 // Overriden to write our state into a stream
 /////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::WriteToStream(IStream *pStream)
+HRESULT CDeinterlaceFilter::WriteToStream(IStream* pStream)
 {
-    return pStream->Write(&m_DeinterlaceType, sizeof(m_DeinterlaceType), NULL);
+    int Version(120);
+    pStream->Write(&Version, sizeof(Version), NULL);
+    pStream->Write(&m_DeinterlaceType, sizeof(m_DeinterlaceType), NULL);
+    pStream->Write(&m_bIsOddFieldFirst, sizeof(m_bIsOddFieldFirst), NULL);
+    return m_PlugInName.WriteToStream(pStream);
 }
 
 
@@ -981,9 +1002,41 @@ HRESULT CDeinterlaceFilter::WriteToStream(IStream *pStream)
 // ReadFromStream
 // Likewise overriden to restore our state from a stream
 /////////////////////////////////////////////////////////////////////////////
-HRESULT CDeinterlaceFilter::ReadFromStream(IStream *pStream)
+HRESULT CDeinterlaceFilter::ReadFromStream(IStream* pStream)
 {
-    return pStream->Read(&m_DeinterlaceType, sizeof(m_DeinterlaceType), NULL);
+    wchar_t Name[MAX_PATH] = L"";
+    wchar_t* ReadChar = Name;
+    int Version(0);
+    
+    HRESULT hr = pStream->Read(&Version, sizeof(Version), NULL);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    
+    // cope with old filter graph files
+    if(Version != 120)
+    {
+        m_DeinterlaceType = Version;
+        return hr;
+    }
+    
+    hr = pStream->Read(&m_DeinterlaceType, sizeof(m_DeinterlaceType), NULL);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    hr = pStream->Read(&m_bIsOddFieldFirst, sizeof(m_bIsOddFieldFirst), NULL);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+
+    hr = m_PlugInName.ReadFromStream(pStream);
+    {
+        return hr;
+    }
+    return S_OK;
 }
 
 
@@ -991,10 +1044,10 @@ HRESULT CDeinterlaceFilter::ReadFromStream(IStream *pStream)
 // GetPages
 // Returns the clsid's of the property pages we support
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlaceFilter::GetPages(CAUUID *pPages)
+STDMETHODIMP CDeinterlaceFilter::GetPages(CAUUID* pPages)
 {
     pPages->cElems = 1;
-    pPages->pElems = (GUID *) CoTaskMemAlloc(sizeof(GUID));
+    pPages->pElems = (GUID*) CoTaskMemAlloc(sizeof(GUID));
     if (pPages->pElems == NULL)
     {
         return E_OUTOFMEMORY;
@@ -1005,8 +1058,7 @@ STDMETHODIMP CDeinterlaceFilter::GetPages(CAUUID *pPages)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// get_DeinterlaceType
-// Return the current effect selected
+// Inplement IDeinterlace Functions
 /////////////////////////////////////////////////////////////////////////////
 STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(long* piType)
 {
@@ -1017,14 +1069,39 @@ STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(long* piType)
 }
 
 
-/////////////////////////////////////////////////////////////////////////////
-// put_DeinterlaceType
-// Set the required video effect
-/////////////////////////////////////////////////////////////////////////////
 STDMETHODIMP CDeinterlaceFilter::put_DeinterlaceType(long iType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
     m_DeinterlaceType = iType;
     SetDirty(TRUE);
+    return NOERROR;
+}
+
+STDMETHODIMP CDeinterlaceFilter::get_IsOddFieldFirst(VARIANT_BOOL* pOddFirst)
+{
+    CAutoLock cAutolock(&m_DeinterlaceLock);
+    CheckPointer(pOddFirst,E_POINTER);
+    *pOddFirst = m_bIsOddFieldFirst?VARIANT_TRUE:VARIANT_FALSE;
+    return NOERROR;
+}
+
+STDMETHODIMP CDeinterlaceFilter::put_IsOddFieldFirst(VARIANT_BOOL OddFirst)
+{
+    CAutoLock cAutolock(&m_DeinterlaceLock);
+    m_bIsOddFieldFirst = (OddFirst != VARIANT_FALSE);
+    return NOERROR;
+}
+
+STDMETHODIMP CDeinterlaceFilter::get_DScalerPluginName(BSTR* pPlugInName)
+{
+    CAutoLock cAutolock(&m_DeinterlaceLock);
+    *pPlugInName = m_PlugInName.Copy();
+    return NOERROR;
+}
+
+STDMETHODIMP CDeinterlaceFilter::put_DScalerPluginName(BSTR PlugInName)
+{
+    CAutoLock cAutolock(&m_DeinterlaceLock);
+    m_PlugInName = PlugInName;
     return NOERROR;
 }

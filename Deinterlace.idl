@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.idl,v 1.1 2001-11-14 13:32:05 adcockj Exp $
+// $Id: Deinterlace.idl,v 1.2 2001-11-14 16:42:18 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2001/11/14 13:32:05  adcockj
+// Moved COM definitions into IDL
+//
 /////////////////////////////////////////////////////////////////////////////
 
 import "oaidl.idl";
@@ -53,9 +56,17 @@ import "ocidl.idl";
 interface IDeinterlace : IUnknown
 {
     [propget, id(1), helpstring("property DeinterlaceType")] 
-    HRESULT DeinterlaceType([out, retval] long *pVal);
+    HRESULT DeinterlaceType([out, retval] long* pVal);
     [propput, id(1), helpstring("property DeinterlaceType")] 
     HRESULT DeinterlaceType([in] long newVal);
+    [propget, id(2), helpstring("property IsOddFieldFirst")] 
+    HRESULT IsOddFieldFirst([out, retval] VARIANT_BOOL* pVal);
+    [propput, id(2), helpstring("property IsOddFieldFirst")] 
+    HRESULT IsOddFieldFirst([in] VARIANT_BOOL newVal);
+    [propget, id(3), helpstring("property DScalerPluginName")] 
+    HRESULT DScalerPluginName([out, retval] BSTR* pVal);
+    [propput, id(3), helpstring("property DScalerPluginName")] 
+    HRESULT DScalerPluginName([in] BSTR newVal);
 };
 
 [

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DI_GreedyH.cpp,v 1.3 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DI_Plugin.cpp,v 1.1 2001-11-14 16:42:18 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 Peter Gubanov.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,20 +29,25 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/11/13 13:51:43  adcockj
+// Tidy up code and made to mostly conform to coding standards
+// Changed history behaviour
+// Made to use DEINTERLACE_INFO throughout
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"
 #include "cpu.h"
-#include "DS_plugin.h"
+#include "DI_Plugin.h"
 #include "memcpy.h"
 
-DDeinterlaceGreedyH::DDeinterlaceGreedyH() :
+CDeinterlacePlugin::CDeinterlacePlugin(LPCSTR PluginName) :
     m_pMethod(NULL),
     m_hModule(NULL),
     m_fStreaming(FALSE)
 {
-    HMODULE hModule = ::LoadLibrary("DI_GreedyH.dll");
+    HMODULE hModule = ::LoadLibrary(PluginName);
     if(hModule == NULL) 
     {
         return;
@@ -83,7 +88,7 @@ DDeinterlaceGreedyH::DDeinterlaceGreedyH() :
     }
 }
 
-DDeinterlaceGreedyH::~DDeinterlaceGreedyH()
+CDeinterlacePlugin::~CDeinterlacePlugin()
 {
     if (m_hModule)
     {
@@ -93,7 +98,7 @@ DDeinterlaceGreedyH::~DDeinterlaceGreedyH()
     m_pMethod = NULL;
 }
 
-void DDeinterlaceGreedyH::startStreaming()
+void CDeinterlacePlugin::StartStreaming()
 {
     CAutoLock lck(this);
 
@@ -106,7 +111,7 @@ void DDeinterlaceGreedyH::startStreaming()
     m_fStreaming = TRUE;
 }
 
-void DDeinterlaceGreedyH::stopStreaming() 
+void CDeinterlacePlugin::StopStreaming() 
 {
     CAutoLock lck(this);
 
@@ -119,27 +124,34 @@ void DDeinterlaceGreedyH::stopStreaming()
     m_fStreaming = FALSE;
 }
 
-void DDeinterlaceGreedyH::process(DEINTERLACE_INFO *pInfo) 
+void CDeinterlacePlugin::Process(DEINTERLACE_INFO *pInfo) 
 {
     // can't use CAutolock as we're
     // going to use SEH
     Lock();
 
-    if (m_pMethod && m_fStreaming) 
+    if(m_fStreaming)
     {
-        __try 
+        if(m_pMethod) 
         {
-            m_pMethod->pfnAlgorithm(pInfo);
+            __try 
+            {
+                m_pMethod->pfnAlgorithm(pInfo);
+            }
+            __except(EXCEPTION_EXECUTE_HANDLER) 
+            {
+                DbgLog((LOG_ERROR, 1, TEXT("Exception in deinterlacing module")));
+            }
         }
-        __except(EXCEPTION_EXECUTE_HANDLER) 
+        else
         {
-            DbgLog((LOG_ERROR, 1, TEXT("Exception in deinterlacing module")));
+            Bob(pInfo);
         }
     }
     Unlock();
 }
 
-void DDeinterlaceGreedyH::showSettingsDialog(HWND hwnd) 
+void CDeinterlacePlugin::ShowSettingsDialog(HWND hwnd) 
 {
     if (m_pMethod && (m_pMethod->pfnPluginShowUI != NULL))
     {

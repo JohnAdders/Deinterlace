@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\..\..\..\..\classes\base" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
+# ADD CPP /nologo /Gz /MT /W3 /Gy /I "..\..\..\..\..\classes\base" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Yu"stdafx.h" /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -80,7 +80,7 @@ SOURCE="$(InputPath)"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MDd /W3 /ZI /I "..\..\..\..\..\classes\base" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oid /c
+# ADD CPP /nologo /Gz /MTd /W3 /ZI /I "..\..\..\..\..\classes\base" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Yu"stdafx.h" /Oid /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -226,10 +226,9 @@ DEP_CPP_DEINTE=\
 	".\cpu.h"\
 	".\Deinterlace.h"\
 	".\DeinterlaceFilter.h"\
-	".\DeinterlaceGuids.h"\
 	".\DeinterlaceInputPin.h"\
 	".\DI.h"\
-	".\DS_plugin.h"\
+	".\DI_Plugin.h"\
 	".\memcpy.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
@@ -315,9 +314,7 @@ DEP_CPP_DEINTER=\
 SOURCE=.\DeinterlaceProperties.Cpp
 DEP_CPP_DEINTERL=\
 	".\Deinterlace.h"\
-	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
-	".\IDeinterlace.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
@@ -442,14 +439,14 @@ DEP_CPP_DI_BO=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\DI_GreedyH.cpp
-DEP_CPP_DI_GR=\
+SOURCE=.\DI_Plugin.cpp
+DEP_CPP_DI_PL=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\cpu.h"\
 	".\DI.h"\
-	".\DS_plugin.h"\
+	".\DI_Plugin.h"\
 	".\memcpy.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
@@ -568,6 +565,55 @@ DEP_CPP_MEMCP=\
 	{$(INCLUDE)}"wxutil.h"\
 	
 # End Source File
+# Begin Source File
+
+SOURCE=.\stdafx.cpp
+DEP_CPP_STDAF=\
+	".\stdafx.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"audevcod.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"dsschedule.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
+
+!IF  "$(CFG)" == "Deinterlace - Win32 Release"
+
+# ADD CPP /Yc"stdafx.h"
+
+!ELSEIF  "$(CFG)" == "Deinterlace - Win32 Debug"
+
+# ADD CPP /Yc"stdafx.h"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -594,11 +640,19 @@ SOURCE=.\DI.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\DS_plugin.h
+SOURCE=.\DI_Plugin.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\memcpy.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\stdafx.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

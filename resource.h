@@ -16,6 +16,9 @@
 #define IDC_TYPE1                       1022
 #define IDC_TYPE2                       1023
 #define IDC_TYPE3                       1024
+#define IDC_TYPE4                       1025
+#define IDC_ODDFIELDFIRST               1027
+#define IDC_PLUGINS                     1028
 #define VERSION_RES_LANGUAGE            0x409
 #define VERSION_RES_CHARSET             1252
 #define IDS_STATIC                      -1
@@ -28,7 +31,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        102
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1025
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
