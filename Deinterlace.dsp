@@ -90,7 +90,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 strmbasd.lib msvcrtd.lib quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib largeint.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /debug /debugtype:both /machine:I386 /out:".\Deinterlace.ax" /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 strmbasd.lib msvcrtd.lib quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib largeint.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /debug /machine:I386 /out:".\Deinterlace.ax" /debug:mapped,full /subsystem:windows,4.0
 # SUBTRACT LINK32 /pdb:none /nodefaultlib
 # Begin Custom Build - Performing registration
 OutDir=.
@@ -118,6 +118,7 @@ SOURCE="$(InputPath)"
 SOURCE=.\CPU.cpp
 DEP_CPP_CPU_C=\
 	".\cpu.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -158,13 +159,107 @@ DEP_CPP_DEINT=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
-	"..\DScaler\Api\DS_Filter.h"\
 	".\Deinterlace.h"\
+	".\DeinterlaceFilter.h"\
 	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
 	".\DI.h"\
+	".\IDeinterlace.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"audevcod.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"dsschedule.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeinterlaceFilter.cpp
+DEP_CPP_DEINTE=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
+	".\cpu.h"\
+	".\DeinterlaceFilter.h"\
+	".\DeinterlaceGuids.h"\
+	".\DeinterlaceInputPin.h"\
+	".\DI.h"\
 	".\DS_plugin.h"\
 	".\IDeinterlace.h"\
+	".\memcpy.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"audevcod.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"dsschedule.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeinterlaceInputPin.cpp
+DEP_CPP_DEINTER=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
+	".\DeinterlaceFilter.h"\
+	".\DeinterlaceInputPin.h"\
+	".\DI.h"\
+	".\IDeinterlace.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -201,12 +296,12 @@ DEP_CPP_DEINT=\
 # Begin Source File
 
 SOURCE=.\DeinterlaceProperties.Cpp
-DEP_CPP_DEINTE=\
+DEP_CPP_DEINTERL=\
 	".\Deinterlace.h"\
 	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
-	".\DI.h"\
 	".\IDeinterlace.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -244,9 +339,13 @@ DEP_CPP_DEINTE=\
 
 SOURCE=.\DI_BlendedClip.cpp
 DEP_CPP_DI_BL=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\cpu.h"\
 	".\DI.h"\
 	".\memcpy.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -284,9 +383,13 @@ DEP_CPP_DI_BL=\
 
 SOURCE=.\DI_BobAndWeave.cpp
 DEP_CPP_DI_BO=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\cpu.h"\
 	".\DI.h"\
 	".\memcpy.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -327,11 +430,11 @@ DEP_CPP_DI_GR=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
-	"..\DScaler\Api\DS_Filter.h"\
 	".\cpu.h"\
 	".\DI.h"\
 	".\DS_plugin.h"\
 	".\memcpy.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -369,9 +472,13 @@ DEP_CPP_DI_GR=\
 
 SOURCE=.\DI_TwoFrame.cpp
 DEP_CPP_DI_TW=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\cpu.h"\
 	".\DI.h"\
 	".\memcpy.h"\
+	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -410,6 +517,38 @@ DEP_CPP_DI_TW=\
 SOURCE=.\memcpy.cpp
 DEP_CPP_MEMCP=\
 	".\memcpy.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"audevcod.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"dsschedule.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
 	
 # End Source File
 # End Group
@@ -426,7 +565,15 @@ SOURCE=.\Deinterlace.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DeinterlaceFilter.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\DeinterlaceGuids.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeinterlaceInputPin.h
 # End Source File
 # Begin Source File
 
@@ -457,6 +604,9 @@ SOURCE=.\memcpy.h
 SOURCE=.\Deinterlace.rc
 # End Source File
 # End Group
+# Begin Group "Docs"
+
+# PROP Default_Filter "*.txt"
 # Begin Source File
 
 SOURCE=.\Copying.txt
@@ -481,5 +631,6 @@ SOURCE=.\Thanks.txt
 
 SOURCE=.\Todo.txt
 # End Source File
+# End Group
 # End Target
 # End Project

@@ -1,23 +1,37 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DI_BlendedClip.cpp,v 1.3 2001-11-09 15:34:27 pgubanov Exp $
+// $Id: DI_BlendedClip.cpp,v 1.4 2001-11-13 13:51:43 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 Tom Barry.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
 //
-//	This file is subject to the terms of the GNU General Public License as
-//	published by the Free Software Foundation.  A copy of this license is
-//	included with this software distribution in the file COPYING.  If you
-//	do not have a copy, you may obtain a copy by writing to the Free
-//	Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+//  This file is subject to the terms of the GNU General Public License as
+//  published by the Free Software Foundation.  A copy of this license is
+//  included with this software distribution in the file COPYING.  If you
+//  do not have a copy, you may obtain a copy by writing to the Free
+//  Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //
-//	This software is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details
+//  This software is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details
+//
+//  In addition, as a special exception, John Adcock
+//  gives permission to link the code of this program with
+//  DirectShow Filter graph and distribute linked combinations including
+//  the two.  You must obey the GNU General Public License in all
+//  respects for all of the code used other than that which mapipulated 
+//  the filter graph. If you modify
+//  this file, you may extend this exception to your version of the
+//  file, but you are not obligated to do so.  If you do not wish to
+//  do so, delete this exception statement from your version.
+//
 /////////////////////////////////////////////////////////////////////////////
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/11/09 15:34:27  pgubanov
+// Try to work with DScaler plugins. Some code adopted from DIDMO, but less general anyway. For some reason, plugin crashes...
+//
 // Revision 1.2  2001/11/01 11:04:19  adcockj
 // Updated headers
 // Checked in changes by Micheal Eskin and Hauppauge
@@ -27,13 +41,13 @@
 //
 // Date          Developer             Changes
 //
-// 09 Nov 2000   Tom Barry		       Added Blended Clipping Deinterlace method
+// 09 Nov 2000   Tom Barry             Added Blended Clipping Deinterlace method
 //
 // 30 Dec 2000   Mark Rejhon           Split into separate module
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#include <streams.h>
+#include "stdafx.h"
 #include "DI.h"
 #include "cpu.h"
 #include "memcpy.h"
@@ -96,7 +110,7 @@
 // still see too many Weave artifacts ("venetion blinds").  It's best to try everything
 // else first.
 
-	int		BlcMinimumClip = -15;				// currently -100 .. 100
+    int     BlcMinimumClip = -15;               // currently -100 .. 100
 
 // "Pixel Motion Sensitivity" slider:  This determines how sensitive we are to motion.
 // Motion is calculated as the maximum absolute change in luma from the previous field
@@ -105,7 +119,7 @@
 // of venetiaon blinds that can occur with sudden scene changes.  This value is
 // calculated separately for each pixel.
 
-	UINT	BlcPixelMotionSense = 17;
+    UINT    BlcPixelMotionSense = 17;
 
 // "Recent Motion Sensitivity" slider:  This increases the tendency to use Clip based
 // upon an n-period Exponential Moving Average of the recent motion.  Recent motion
@@ -114,20 +128,20 @@
 // does not attempt to do 3:2 pulldown I believe the motion values could be of assistance
 // in the routines that do.  
 
-	int		BlcRecentMotionSense = 0;		// current -100 .. 100)		
+    int     BlcRecentMotionSense = 0;       // current -100 .. 100)     
 
 // "Motion Average Period" slider:  This sets the period of the moving average for Recent
 // Motion Sensitivity.  
 
 // For those of you not recently programming for the stock market:
 
-//		An Exponential Moving Average is a way to keep and update an average without 
-//		keeping around a history of all the recent events.  In the stock market,
-//		an n Period Exponential Moving Average of variable X is usually defined as:
+//      An Exponential Moving Average is a way to keep and update an average without 
+//      keeping around a history of all the recent events.  In the stock market,
+//      an n Period Exponential Moving Average of variable X is usually defined as:
 
-//			X_new_avg = ( X_old_avg * (n-1) + 2 * X) / (n+1)
+//          X_new_avg = ( X_old_avg * (n-1) + 2 * X) / (n+1)
 
-	UINT	BlcMotionAvgPeriod = 20;		// currently 1..200
+    UINT    BlcMotionAvgPeriod = 20;        // currently 1..200
 
 // "Pixel Comb Sensitivity" slider:  This determines how sensitive we are to the current
 // comb factor of each pixel.  I used a simplified comb factor C = abs(2*W - H - L)/2,
@@ -136,17 +150,17 @@
 // Motion Sense seem to be the two main things to play with to get good results.  Generally,
 // increase one of these if you get Weave artifacts and decrease one if you get BOB artifacts.
   
-	UINT	BlcPixelCombSense = 27;
+    UINT    BlcPixelCombSense = 27;
 
 // "Recent Comb Senseitivity" slider:  Operates like the Recent Motion slider but operates
 // on the average Comb Factor.
 
-	UINT	BlcRecentCombSense = 0;
+    UINT    BlcRecentCombSense = 0;
 
 // "Comb Average Period" slider: Sets the period of the Comb exponential moving average.
 // See the comments on "Motion Average Period".
 
-	UINT	BlcCombAvgPeriod = 20;			// currently 1.200
+    UINT    BlcCombAvgPeriod = 20;          // currently 1.200
 
 // "Skip High Comb Frames" slider:  I added this one in the hopes that it could help to
 // skip a frame in the event of a sudden flash attack on a rapid scene change or maybe
@@ -154,7 +168,7 @@
 // a chance to experiment with it yet.  It will give very ugly results if you set it 
 // too high.
 
-	UINT	BlcHighCombSkip = 10;			// larger values skip more
+    UINT    BlcHighCombSkip = 10;           // larger values skip more
 
 // "Skip Low Motion Frames" slider:  This also is just experimental an probably of low
 // value.  The idea here is that any frame with sufficiently low change from the previous
@@ -162,18 +176,18 @@
 // normal use.  NOTE - This slider (but not parm) will soon be replaced by the
 // Vertical Smoothing slider.
 
-	UINT	BlcLowMotionSkip = 0;			// larger values skip more
+    UINT    BlcLowMotionSkip = 0;           // larger values skip more
 
 // "Vertical Smoothing" slider: Sets a smoothing constant to smooth between the even
 // and odd lines.  Not yet implemented, but the INI parm is there.
 
-	UINT    BlcVerticalSmoothing = 0;
+    UINT    BlcVerticalSmoothing = 0;
 
 // "Use Interpolated BOB instead of Clip" check box.  For those who don't like the
 // Clipped Weave, this will change it to an Interpolated Bob.  All other blending and
 // processing will still function. (but it probably won't look as good).
 
-	BOOL	BlcUseInterpBob = FALSE;
+    BOOL    BlcUseInterpBob = FALSE;
 
 // "Blend Chroma Value" check box:  Usually the chroma value for the Clipped Weave is
 // just taken from the pixel above it.  Checking this box causes the chroma values to 
@@ -183,99 +197,99 @@
 // but it sometimes seems to create some softness or shimmering on my stock ticker or
 // rapidly moving objects with lots of detail like a hockey game.
 
-	BOOL	BlcBlendChroma = TRUE;			// default should maybe be TRUE?
+    BOOL    BlcBlendChroma = TRUE;          // default should maybe be TRUE?
 
 // Finally there is an INI parm, but not a contol to determine whether to even display
 // the Blended Clipping controls when that method is selected. If set to false then
 // Blended Clipping parms are determined only from the INI file.
 
-	BOOL	BlcShowControls = TRUE;
+    BOOL    BlcShowControls = TRUE;
 
 // Other global values, not user parms:
 
-	UINT	BlcAverageMotions[5][2] = {0};  // reserved
-	UINT	BlcTotalAverageMotion = 0;
-	UINT	BlcAverageCombs[5][2] = {0};	// reserved
-	UINT	BlcTotalAverageComb = 0;
-	BOOL	BlcWantsToFlip;
+    UINT    BlcAverageMotions[5][2] = {0};  // reserved
+    UINT    BlcTotalAverageMotion = 0;
+    UINT    BlcAverageCombs[5][2] = {0};    // reserved
+    UINT    BlcTotalAverageComb = 0;
+    BOOL    BlcWantsToFlip;
 
 
-BOOL BlendedClipping(MY_DEINTERLACE_INFO *info)
+BOOL __cdecl BlendedClipping(DEINTERLACE_INFO *info)
 {
-	int Line;
-	int	LoopCtr;
-	int OddPtr;
-	long X;
-	short* L1;					// ptr to Line1, of 3
-	short* L2;					// ptr to Line2, the weave line
-	short* L3;					// ptr to Line3
-	short* LP1;					// ptr to prev Line1
-	short* LP3;					// ptr to prev Line3
-	BYTE* Dest;
-	BYTE *lpCurOverlay = info->Overlay;
-	short **pOddLines = info->OddLines[0];
-	short **pEvenLines = info->EvenLines[0];
-	short **pPrevLines = info->IsOdd ? info->OddLines[1] : info->EvenLines[1];
-	const __int64 YMask		= 0x00ff00ff00ff00ff;	// to keep only luma
-	const __int64 UVMask    = 0xff00ff00ff00ff00;	// to keep only chroma
-	const __int64 ShiftMask = 0xfefffefffefffeff;	// to avoid shifting chroma to luma
-	const __int64 SomeOnes  = 0x0001000100010001;	
-	__int64 i;
-	__int64 MinClip;
-	__int64 MinClipMinus;
-	__int64 PixelMotionSense;
-	__int64 PixelCombSense;
-	__int64 L1Mask;					// determines blended chroma vs. chroma from line 1
-	__int64 LCMask;					// determines whether we use clip or blend chroma
-	__int64 BobMask;				// determines whether we bob or blend chroma
-	__int64 MotionAvgL;				// work sum for one line
-	__int64 CombAvgL;				// "
-	__int64 MotionAvg;				// total sum/avg
-	__int64 CombAvg;				// "
-	
-	union 
-	{
-		__int64 Wqword;			
-		__int32 Wlong[2];
-	} W;
+    int Line;
+    int LoopCtr;
+    int OddPtr;
+    long X;
+    short* L1;                  // ptr to Line1, of 3
+    short* L2;                  // ptr to Line2, the weave line
+    short* L3;                  // ptr to Line3
+    short* LP1;                 // ptr to prev Line1
+    short* LP3;                 // ptr to prev Line3
+    BYTE* Dest;
+    BYTE *lpCurOverlay = info->Overlay;
+    short **pOddLines = info->OddLines[0];
+    short **pEvenLines = info->EvenLines[0];
+    short **pPrevLines = info->IsOdd ? info->OddLines[1] : info->EvenLines[1];
+    const __int64 YMask     = 0x00ff00ff00ff00ff;   // to keep only luma
+    const __int64 UVMask    = 0xff00ff00ff00ff00;   // to keep only chroma
+    const __int64 ShiftMask = 0xfefffefffefffeff;   // to avoid shifting chroma to luma
+    const __int64 SomeOnes  = 0x0001000100010001;   
+    __int64 i;
+    __int64 MinClip;
+    __int64 MinClipMinus;
+    __int64 PixelMotionSense;
+    __int64 PixelCombSense;
+    __int64 L1Mask;                 // determines blended chroma vs. chroma from line 1
+    __int64 LCMask;                 // determines whether we use clip or blend chroma
+    __int64 BobMask;                // determines whether we bob or blend chroma
+    __int64 MotionAvgL;             // work sum for one line
+    __int64 CombAvgL;               // "
+    __int64 MotionAvg;              // total sum/avg
+    __int64 CombAvg;                // "
+    
+    union 
+    {
+        __int64 Wqword;         
+        __int32 Wlong[2];
+    } W;
 
-	// Set up and scale our user parms
-	MotionAvg = 0;
-	CombAvg = 0;
+    // Set up and scale our user parms
+    MotionAvg = 0;
+    CombAvg = 0;
 
-	if (pOddLines == NULL || pEvenLines == NULL || pPrevLines == NULL)
-		return FALSE;
+    if (pOddLines == NULL || pEvenLines == NULL || pPrevLines == NULL)
+        return FALSE;
 
-	if (BlcBlendChroma)
-	{
-		if (BlcUseInterpBob)		// use Luma, chroma from interp bob 
-		{
-			L1Mask = 0;
-			LCMask = 0;
-			BobMask = 0xfefffefffefffeff;
-		}
-		else						// use Luma, chroma from Clip
-		{
-			L1Mask = 0;
-			LCMask = 0xffffffffffffffff;
-			BobMask = 0;
-		}
-	}
-	else
-	{
-		if (BlcUseInterpBob)		// use Luma from bob, chroma from L1
-		{
-			L1Mask = UVMask;
-			LCMask = 0;
-			BobMask = YMask;
-		}
-		else						// use Luma from Clip, chroma from L1
-		{
-			L1Mask = UVMask;
-			LCMask = YMask;
-			BobMask = 0;
-		}
-	}
+    if (BlcBlendChroma)
+    {
+        if (BlcUseInterpBob)        // use Luma, chroma from interp bob 
+        {
+            L1Mask = 0;
+            LCMask = 0;
+            BobMask = 0xfefffefffefffeff;
+        }
+        else                        // use Luma, chroma from Clip
+        {
+            L1Mask = 0;
+            LCMask = 0xffffffffffffffff;
+            BobMask = 0;
+        }
+    }
+    else
+    {
+        if (BlcUseInterpBob)        // use Luma from bob, chroma from L1
+        {
+            L1Mask = UVMask;
+            LCMask = 0;
+            BobMask = YMask;
+        }
+        else                        // use Luma from Clip, chroma from L1
+        {
+            L1Mask = UVMask;
+            LCMask = YMask;
+            BobMask = 0;
+        }
+    }
 
 // The effects of the recent average motion, recent average comb, and their relative
 // weighting parameters can be precalculated only once per frame and rolled into the
@@ -293,58 +307,58 @@ BOOL BlendedClipping(MY_DEINTERLACE_INFO *info)
 // the typical value of 2000 means an average change of about 8 in the 8 bit luma values.
 // Both BlcMinimumClip and BlcRecentMotionSense may now have negative values but since
 // we are using saturated arithmatic those are set in a separate field.
-	X = __max(BlcRecentMotionSense,0);
-	X = (X * BlcTotalAverageMotion / 7) 
-				+ (BlcRecentCombSense * BlcTotalAverageComb) / 5;
-	i = __max((BlcMinimumClip * 65535 / 100), 0);
-	i = __min( (X + i), 65535);				// scale to range of 0-65535
-	MinClip = i << 48 | i << 32 | i << 16 | i;
-	
-	X = __max( (-BlcRecentMotionSense * BlcTotalAverageMotion / 10), 0)
-		+ __max( (-BlcMinimumClip), 0);
-	i = __min(X, 255);
-	MinClipMinus = i << 48 | i << 32 | i << 16 | i;
+    X = __max(BlcRecentMotionSense,0);
+    X = (X * BlcTotalAverageMotion / 7) 
+                + (BlcRecentCombSense * BlcTotalAverageComb) / 5;
+    i = __max((BlcMinimumClip * 65535 / 100), 0);
+    i = __min( (X + i), 65535);             // scale to range of 0-65535
+    MinClip = i << 48 | i << 32 | i << 16 | i;
+    
+    X = __max( (-BlcRecentMotionSense * BlcTotalAverageMotion / 10), 0)
+        + __max( (-BlcMinimumClip), 0);
+    i = __min(X, 255);
+    MinClipMinus = i << 48 | i << 32 | i << 16 | i;
 
 // Set up our two parms that are actually evaluated for each pixel
-	i = BlcPixelMotionSense * 257/100;		// scale to range of 0-257
-	PixelMotionSense = i << 48 | i << 32 | i << 16 | i;    // only 32 bits?>>>>
-	
-	i = BlcPixelCombSense * 257/100;		// scale to range of 0-257
-	PixelCombSense = i << 48 | i << 32 | i << 16 | i;    // only 32 bits?>>>>
-	
-	OddPtr = (info->IsOdd) ? 1 : 0;
-	
+    i = BlcPixelMotionSense * 257/100;      // scale to range of 0-257
+    PixelMotionSense = i << 48 | i << 32 | i << 16 | i;    // only 32 bits?>>>>
+    
+    i = BlcPixelCombSense * 257/100;        // scale to range of 0-257
+    PixelCombSense = i << 48 | i << 32 | i << 16 | i;    // only 32 bits?>>>>
+    
+    OddPtr = (info->IsOdd) ? 1 : 0;
+    
 // copy first even line no matter what, and the first odd line if we're
 // processing an odd field.
-	memcpyMMX(lpCurOverlay, pEvenLines[0], info->LineLength);	// DL0
-	if (info->IsOdd)
-		memcpyMMX(lpCurOverlay + info->OverlayPitch, pOddLines[0], info->LineLength);  // DL1
+    memcpyMMX(lpCurOverlay, pEvenLines[0], info->LineLength);   // DL0
+    if (info->IsOdd)
+        memcpyMMX(lpCurOverlay + info->OverlayPitch, pOddLines[0], info->LineLength);  // DL1
 
-	for (Line = 0; Line < (info->FieldHeight - 1); ++Line)
-	{
-		LoopCtr = info->LineLength / 8;				// there are LineLength / 8 qwords per line
-		MotionAvgL = 0;
-		CombAvgL = 0;
+    for (Line = 0; Line < (info->FieldHeight - 1); ++Line)
+    {
+        LoopCtr = info->LineLength / 8;             // there are LineLength / 8 qwords per line
+        MotionAvgL = 0;
+        CombAvgL = 0;
 
-		if (info->IsOdd)
-		{
-			L1 = pOddLines[Line];		
-			L2 = pEvenLines[Line + 1];	
-			L3 = pOddLines[Line + 1];	
-			LP1 = pPrevLines[Line];			// prev Odd lines
-			LP3 = pPrevLines[Line+1];		
-			Dest = lpCurOverlay + (Line * 2 + 2) * info->OverlayPitch;	// DL2
-		}
-		else
-		{
-			L1 = pEvenLines[Line];		
-			L2 = pOddLines[Line];		
-			L3 = pEvenLines[Line + 1];   
-			LP1 = pPrevLines[Line];			// prev even lines
-			LP3 = pPrevLines[Line+1];		
-			Dest = lpCurOverlay + (Line * 2 + 1) * info->OverlayPitch;	// DL1
-		}
-		memcpyMMX(Dest + info->OverlayPitch, L3, info->LineLength);
+        if (info->IsOdd)
+        {
+            L1 = pOddLines[Line];       
+            L2 = pEvenLines[Line + 1];  
+            L3 = pOddLines[Line + 1];   
+            LP1 = pPrevLines[Line];         // prev Odd lines
+            LP3 = pPrevLines[Line+1];       
+            Dest = lpCurOverlay + (Line * 2 + 2) * info->OverlayPitch;  // DL2
+        }
+        else
+        {
+            L1 = pEvenLines[Line];      
+            L2 = pOddLines[Line];       
+            L3 = pEvenLines[Line + 1];   
+            LP1 = pPrevLines[Line];         // prev even lines
+            LP3 = pPrevLines[Line+1];       
+            Dest = lpCurOverlay + (Line * 2 + 1) * info->OverlayPitch;  // DL1
+        }
+        memcpyMMX(Dest + info->OverlayPitch, L3, info->LineLength);
 
 // For ease of reading, the comments below assume that we're operating on an odd
 // field (i.e., that info->IsOdd is true).  The exact same processing is done when we
@@ -354,75 +368,75 @@ BOOL BlendedClipping(MY_DEINTERLACE_INFO *info)
 // even field" etc.  So wherever you see "odd" or "even" below, keep in mind that
 // half the time this function is called, those words' meanings will invert.
 
-		_asm
-		{
-			mov eax, dword ptr [L1]		
-			mov ebx, dword ptr [L2]		
-			mov edx, dword ptr [L3]		
-			mov esi, dword ptr [LP1]		
-			mov ecx, dword ptr [LP3]   
-			mov edi, dword ptr [Dest]       // DL2 if Odd or DL1 if Even 
-			movq mm7,YMask					// useful constant within loop 
-			
-			align 8
-DoNext8Bytes:			
-			movq mm0, qword ptr[eax]		// L1
-			movq mm1, qword ptr[ebx]		// L2
-			movq mm2, qword ptr[edx]		// L3
+        _asm
+        {
+            mov eax, dword ptr [L1]     
+            mov ebx, dword ptr [L2]     
+            mov edx, dword ptr [L3]     
+            mov esi, dword ptr [LP1]        
+            mov ecx, dword ptr [LP3]   
+            mov edi, dword ptr [Dest]       // DL2 if Odd or DL1 if Even 
+            movq mm7,YMask                  // useful constant within loop 
+            
+            align 8
+DoNext8Bytes:           
+            movq mm0, qword ptr[eax]        // L1
+            movq mm1, qword ptr[ebx]        // L2
+            movq mm2, qword ptr[edx]        // L3
 
 // OK, now we've moved in DL3 and Dl1 (earlier).  We have to make something for DL2
 // What we will do is use L2 unless it is > Max(L1,L3) or < Min(L2,L3). If so clip to the closer.
 // Note we are clipping all of Y,U, and V values here, not just masking Luma
 
-			movq mm4, mm0					// L1
-			movq mm6, mm2					// L3
-			psubusb mm4, mm2				// - L3, with saturation
-			paddusb mm4, mm2                // now = Max(L1,L3)
+            movq mm4, mm0                   // L1
+            movq mm6, mm2                   // L3
+            psubusb mm4, mm2                // - L3, with saturation
+            paddusb mm4, mm2                // now = Max(L1,L3)
 
-			pcmpeqb mm3, mm3					// all ffffffff
-			psubusb mm3, mm0				// - L1 
-			paddusb mm6, mm3				// add may sat at fff..
-			psubusb mm6, mm3				// now = Min(L1,L3)
-			
-			movq mm5,mm1					// work copy of L2,the weave value
-			psubusb mm5, mm6				// L2 - Min
-			paddusb mm5, mm6				// now = Max(L2,Min(L1,L3)
+            pcmpeqb mm3, mm3                    // all ffffffff
+            psubusb mm3, mm0                // - L1 
+            paddusb mm6, mm3                // add may sat at fff..
+            psubusb mm6, mm3                // now = Min(L1,L3)
+            
+            movq mm5,mm1                    // work copy of L2,the weave value
+            psubusb mm5, mm6                // L2 - Min
+            paddusb mm5, mm6                // now = Max(L2,Min(L1,L3)
 
-			pcmpeqb mm3, mm3				// all ffffffff
-			psubusb mm3, mm5				// - Max(L2,Min(L1,L3) 
-			paddusb mm4, mm3				// add may sat at FFF..
-			psubusb mm4, mm3				// now = Min( Max(L2, Min(L1,L3), L2 )=L2 clipped
+            pcmpeqb mm3, mm3                // all ffffffff
+            psubusb mm3, mm5                // - Max(L2,Min(L1,L3) 
+            paddusb mm4, mm3                // add may sat at FFF..
+            psubusb mm4, mm3                // now = Min( Max(L2, Min(L1,L3), L2 )=L2 clipped
 
 // We have created the clipped value but we may not want to use it, depending on user
 // parm BlcUseInterpBoB.  Make the bob value too.
-			
-			movq	mm5, mm0				// L1
-			pand	mm5, ShiftMask			// "
-			psrlw	mm5, 1
-			movq	mm6, mm2				// L3
-			pand	mm6, ShiftMask			// "
-			psrlw   mm6, 1
-			paddb   mm5, mm6				// interpolated bob here is just the average
+            
+            movq    mm5, mm0                // L1
+            pand    mm5, ShiftMask          // "
+            psrlw   mm5, 1
+            movq    mm6, mm2                // L3
+            pand    mm6, ShiftMask          // "
+            psrlw   mm6, 1
+            paddb   mm5, mm6                // interpolated bob here is just the average
 
 // Now use our preset flag fields to select which we want
 
-			movq	mm6, mm5				// copy of Bob
-			pand	mm6, BobMask			// may mask out nothing, chroma, or all
-			pand    mm4, LCMask				// may mask out nothing, chroma, or all
-			por		mm4, mm6				// our choice, with or without chroma
+            movq    mm6, mm5                // copy of Bob
+            pand    mm6, BobMask            // may mask out nothing, chroma, or all
+            pand    mm4, LCMask             // may mask out nothing, chroma, or all
+            por     mm4, mm6                // our choice, with or without chroma
 
 // Now is a good time to calculate the Comb Factor.  A simple version is just the
 // distance between L2 and the bob (interpolated middle) value now in mm5.
 /*  try a different way for now, maybe change back later - TRB 11/14/00
-			movq	mm6, mm1				// L2
-			psubusb mm6, mm5				// L2 - bob, with sat
-			psubusb	mm5, mm1				// bob - L2
-			por		mm5, mm6				// abs diff (bob - L2)
-			pand	mm5, mm7				// keep only luma
-			movq	mm6, mm5				// save a copy for pixel comb sense calc
-			paddusw mm5, CombAvgL			// bump our hist average
-			movq	CombAvgL, mm5			// and save again
-			pmullw  mm6, PixelCombSense     // mul by user factor, keep only low 16 bits
+            movq    mm6, mm1                // L2
+            psubusb mm6, mm5                // L2 - bob, with sat
+            psubusb mm5, mm1                // bob - L2
+            por     mm5, mm6                // abs diff (bob - L2)
+            pand    mm5, mm7                // keep only luma
+            movq    mm6, mm5                // save a copy for pixel comb sense calc
+            paddusw mm5, CombAvgL           // bump our hist average
+            movq    CombAvgL, mm5           // and save again
+            pmullw  mm6, PixelCombSense     // mul by user factor, keep only low 16 bits
 */
 
 // Instead let's let the Comb Factor just be the difference between L2 and the clipped
@@ -430,23 +444,23 @@ DoNext8Bytes:
 // This avoids penalizing pixels that just happens to be in a high vertical contrast area.
 // Doing this gives an adjustment similar to the use of the EdgeDetect value in the
 // original Video Delinterlace routine.
-			movq	mm6, mm1				// L2
-			movq    mm5, mm4                // our clipped value, call it LC
-			psubusb mm6, mm5				// L2 - LC, with sat
-			psubusb	mm5, mm1				// LC - L2
-			por		mm5, mm6				// abs diff (LC - L2)
-			pand	mm5, mm7				// keep only luma
-			movq	mm6, mm5				// save a copy for pixel comb sense calc
-			paddusw mm5, CombAvgL			// bump our hist average
-			movq	CombAvgL, mm5			// and save again
-			psubusb mm6, MinClipMinus       // possibly forgive small values
-			pmullw  mm6, PixelCombSense     // mul by user factor, keep only low 16 bits
-			paddusw mm6, mm6                // try making it bigger
-			paddusw mm6, mm6				// again
-			paddusw mm6, mm6				// again
-			paddusw mm6, mm6				// again
-			paddusw mm6, mm6				// again
-			paddusw mm6, mm6				// again
+            movq    mm6, mm1                // L2
+            movq    mm5, mm4                // our clipped value, call it LC
+            psubusb mm6, mm5                // L2 - LC, with sat
+            psubusb mm5, mm1                // LC - L2
+            por     mm5, mm6                // abs diff (LC - L2)
+            pand    mm5, mm7                // keep only luma
+            movq    mm6, mm5                // save a copy for pixel comb sense calc
+            paddusw mm5, CombAvgL           // bump our hist average
+            movq    CombAvgL, mm5           // and save again
+            psubusb mm6, MinClipMinus       // possibly forgive small values
+            pmullw  mm6, PixelCombSense     // mul by user factor, keep only low 16 bits
+            paddusw mm6, mm6                // try making it bigger
+            paddusw mm6, mm6                // again
+            paddusw mm6, mm6                // again
+            paddusw mm6, mm6                // again
+            paddusw mm6, mm6                // again
+            paddusw mm6, mm6                // again
 
 // Let's see how much L1 or L3 have changed since the last frame.  If L1 or L3 has  
 // changed a lot (we take the greater) then L2 (the weave pixel) probably has also.
@@ -455,120 +469,120 @@ DoNext8Bytes:
 // Calc first for L3 change but sum only L1 change in our saved totals for the average.
 // L2 is destroyed here, no longer available.
 
-			movq	mm5, qword ptr[ecx]		// LP3, prev L3
-			movq	mm3, mm2				// work copy of L3
-			psubusb mm3, mm5				// L3 - LP3
-			psubusb mm5, mm2				// LP3 - L3
-			por		mm5, mm3				// abs(L3 - LP3)
-			pand	mm5, mm7				// Ymask, keep luma
+            movq    mm5, qword ptr[ecx]     // LP3, prev L3
+            movq    mm3, mm2                // work copy of L3
+            psubusb mm3, mm5                // L3 - LP3
+            psubusb mm5, mm2                // LP3 - L3
+            por     mm5, mm3                // abs(L3 - LP3)
+            pand    mm5, mm7                // Ymask, keep luma
 
-			movq	mm3, mm0				// L1, another copy
-			movq	mm2, qword ptr[esi]		// LP1, the previous value of L1
-			psubusb mm3, mm2				// L1 - LP1, unsigned & sat.
-			psubusb mm2, mm0				// LP1 - L1, unsigned & sat.
-			por		mm2, mm3				// abs(L1-LP1)
-			pand	mm2, mm7				// Ymask, keep luma
+            movq    mm3, mm0                // L1, another copy
+            movq    mm2, qword ptr[esi]     // LP1, the previous value of L1
+            psubusb mm3, mm2                // L1 - LP1, unsigned & sat.
+            psubusb mm2, mm0                // LP1 - L1, unsigned & sat.
+            por     mm2, mm3                // abs(L1-LP1)
+            pand    mm2, mm7                // Ymask, keep luma
 
-			movq	mm3, MotionAvgL			// good time to update our average totals
-			paddusw mm3, mm2
-			movq	MotionAvgL, mm3
+            movq    mm3, MotionAvgL         // good time to update our average totals
+            paddusw mm3, mm2
+            movq    MotionAvgL, mm3
 
-			psubusb mm2, mm5
-			paddusb mm2, mm5				// max of abs(L1-LP1) and abs(L3-LP3)
-			psubusb mm2, MinClipMinus		// but maybe ignore some small changes
+            psubusb mm2, mm5
+            paddusb mm2, mm5                // max of abs(L1-LP1) and abs(L3-LP3)
+            psubusb mm2, MinClipMinus       // but maybe ignore some small changes
 
-			pmullw	mm2, PixelMotionSense	// mul by user factor, keep only low 16 bits		
-			paddusw mm2, mm6				// combine with our pixel comb
-			paddusw mm2, mm2				// let's dbl them both for greater sensitivity
+            pmullw  mm2, PixelMotionSense   // mul by user factor, keep only low 16 bits        
+            paddusw mm2, mm6                // combine with our pixel comb
+            paddusw mm2, mm2                // let's dbl them both for greater sensitivity
 
 // Now turn the motion & comb factors in mm2 into a 2 blending factors that sum to 256
 
-			paddusw mm2,MinClip				// add user and history factors to bias upward
-			pcmpeqw mm3,mm3					// set all fff... = 65536
-			psubusw mm3,mm2                 // get (more or less) 64k-mm2
-			paddusw mm2, SomeOnes			// adjust so they total 64K?
-			psrlw   mm2,8					// clip factor
-			psrlw   mm3,8					// weave factor, both sum to +-256 
+            paddusw mm2,MinClip             // add user and history factors to bias upward
+            pcmpeqw mm3,mm3                 // set all fff... = 65536
+            psubusw mm3,mm2                 // get (more or less) 64k-mm2
+            paddusw mm2, SomeOnes           // adjust so they total 64K?
+            psrlw   mm2,8                   // clip factor
+            psrlw   mm3,8                   // weave factor, both sum to +-256 
 
 // We still have the clipped (or bob) value in mm4.  Let's call it LC below.
 // mm2 and mm3 should now have factors for how much clip & weave respecively, sum=256
-			movq	mm5,mm4					// save copy of clipped val, LC
-			pand    mm4,mm7					// Ymask, keep luma from clipped val, LC
-			pmullw  mm4,mm2					// clip fact * Clip luma
-			pand    mm1,mm7					// Ymask, keep luma from weave val, L2
-			pmullw  mm1,mm3                 // weave fact * weave luma
-			paddusw mm4,mm1					
-			psrlw   mm4,8					// back to 8 bit luma
+            movq    mm5,mm4                 // save copy of clipped val, LC
+            pand    mm4,mm7                 // Ymask, keep luma from clipped val, LC
+            pmullw  mm4,mm2                 // clip fact * Clip luma
+            pand    mm1,mm7                 // Ymask, keep luma from weave val, L2
+            pmullw  mm1,mm3                 // weave fact * weave luma
+            paddusw mm4,mm1                 
+            psrlw   mm4,8                   // back to 8 bit luma
 
 // combine luma results with chroma and store 4 pixels
-			pand	mm5, UVMask				// maybe keep Chroma from LC, or 0
-			pand	mm0, L1Mask				// Maybe chroma comes from here
-			por		mm4, mm0
-			por		mm4, mm5				// combine them and we've got it
-			movq qword ptr[edi], mm4        // and that is our final answer
+            pand    mm5, UVMask             // maybe keep Chroma from LC, or 0
+            pand    mm0, L1Mask             // Maybe chroma comes from here
+            por     mm4, mm0
+            por     mm4, mm5                // combine them and we've got it
+            movq qword ptr[edi], mm4        // and that is our final answer
 
 // bump ptrs and loop
-			lea		eax,[eax+8]				
-			lea		ebx,[ebx+8]
-			lea		ecx,[ecx+8]
-			lea		edx,[edx+8]
-			lea		edi,[edi+8]			
-			lea		esi,[esi+8]
-			dec		LoopCtr
-			jnz		DoNext8Bytes
+            lea     eax,[eax+8]             
+            lea     ebx,[ebx+8]
+            lea     ecx,[ecx+8]
+            lea     edx,[edx+8]
+            lea     edi,[edi+8]         
+            lea     esi,[esi+8]
+            dec     LoopCtr
+            jnz     DoNext8Bytes
 
 // done with one line but have to roll some totals that might otherwise overflow
-			movq	mm0, CombAvgL
-			pmaddwd mm0, SomeOnes
-			paddd	mm0, CombAvg
-			movq    CombAvg, mm0
-			
-			movq	mm0, MotionAvgL
-			pmaddwd mm0, SomeOnes
-			paddd	mm0, MotionAvg
-			movq    MotionAvg, mm0
+            movq    mm0, CombAvgL
+            pmaddwd mm0, SomeOnes
+            paddd   mm0, CombAvg
+            movq    CombAvg, mm0
+            
+            movq    mm0, MotionAvgL
+            pmaddwd mm0, SomeOnes
+            paddd   mm0, MotionAvg
+            movq    MotionAvg, mm0
 
-			emms
-		}
-	}
+            emms
+        }
+    }
 
-	// Copy last odd line if we're processing an even field.
-	if (! info->IsOdd)
-	{
-		memcpyMMX(lpCurOverlay + (info->FrameHeight - 1) * info->OverlayPitch,
-				  pOddLines[info->FieldHeight - 1],
-				  info->LineLength);
-	}
+    // Copy last odd line if we're processing an even field.
+    if (! info->IsOdd)
+    {
+        memcpyMMX(lpCurOverlay + (info->FrameHeight - 1) * info->OverlayPitch,
+                  pOddLines[info->FieldHeight - 1],
+                  info->LineLength);
+    }
 
 // We will keep moving averages of the Motion and Comb factors.  For extra precision the 
 // values will be kept scaled up by 256.  See comments on rtn header about averages.
 
-	BlcWantsToFlip = TRUE;			// assume we do 
+    BlcWantsToFlip = TRUE;          // assume we do 
 
-	W.Wqword = MotionAvg;
-	X = 256 * (W.Wlong[0] + W.Wlong[1]) / ( (info->FieldHeight - 1) * info->FrameWidth );
+    W.Wqword = MotionAvg;
+    X = 256 * (W.Wlong[0] + W.Wlong[1]) / ( (info->FieldHeight - 1) * info->FrameWidth );
 
-	// Do we want to skip the frame because motion is too small? Check before updating avg.
-	if (BlcTotalAverageMotion > 0  
-			&& (100 * X / BlcTotalAverageMotion) < BlcLowMotionSkip)
-	{
-		BlcWantsToFlip = FALSE;
-	}
-	
-	BlcTotalAverageMotion = (BlcTotalAverageMotion * (BlcMotionAvgPeriod - 1) + 2 * X)
-			/ (BlcMotionAvgPeriod + 1);
+    // Do we want to skip the frame because motion is too small? Check before updating avg.
+    if (BlcTotalAverageMotion > 0  
+            && (100 * X / BlcTotalAverageMotion) < BlcLowMotionSkip)
+    {
+        BlcWantsToFlip = FALSE;
+    }
+    
+    BlcTotalAverageMotion = (BlcTotalAverageMotion * (BlcMotionAvgPeriod - 1) + 2 * X)
+            / (BlcMotionAvgPeriod + 1);
 
-	W.Wqword = CombAvg;
-	X = 256 * (W.Wlong[0] + W.Wlong[1]) / ( (info->FieldHeight - 1) * info->FrameWidth );
+    W.Wqword = CombAvg;
+    X = 256 * (W.Wlong[0] + W.Wlong[1]) / ( (info->FieldHeight - 1) * info->FrameWidth );
 
-	if (BlcTotalAverageComb > 0       // Skip a very high comb frame?
-			&& (100 * X / BlcTotalAverageComb) > 10 * (100 - BlcHighCombSkip))
-	{
-		BlcWantsToFlip = FALSE;
-	}
-	
-	BlcTotalAverageComb = (BlcTotalAverageComb * (BlcCombAvgPeriod - 1) + 2 * X)
-			/ (BlcCombAvgPeriod + 1);
+    if (BlcTotalAverageComb > 0       // Skip a very high comb frame?
+            && (100 * X / BlcTotalAverageComb) > 10 * (100 - BlcHighCombSkip))
+    {
+        BlcWantsToFlip = FALSE;
+    }
+    
+    BlcTotalAverageComb = (BlcTotalAverageComb * (BlcCombAvgPeriod - 1) + 2 * X)
+            / (BlcCombAvgPeriod + 1);
 
-	return BlcWantsToFlip;
+    return BlcWantsToFlip;
 }

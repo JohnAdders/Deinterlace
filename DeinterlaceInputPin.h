@@ -1,12 +1,12 @@
-///////////////////////////////////////////////////////////////////////////////
-// $Id: DI.h,v 1.4 2001-11-13 13:51:43 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000 John Adcock.  All rights reserved.
+// $Id: DeinterlaceInputPin.h,v 1.1 2001-11-13 13:51:43 adcockj Exp $
+/////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
 //
 //	This file is subject to the terms of the GNU General Public License as
 //	published by the Free Software Foundation.  A copy of this license is
-//	included with this software distribution in the file COPYING.  If you
+//	included with this software distribution in the file COPYING.txt.  If you
 //	do not have a copy, you may obtain a copy by writing to the Free
 //	Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //
@@ -27,29 +27,37 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef __DI_H__
-#define __DI_H__
+#ifndef __DEINTERLACEINPUTPIN_H__
+#define __DEINTERLACEINPUTPIN_H__
 
-#include "../DScaler/Api/DS_Deinterlace.h"
+#include "DeinterlaceFilter.h"
 
-DEINTERLACE_FUNC Bob;
-DEINTERLACE_FUNC Weave;
-DEINTERLACE_FUNC DeinterlaceFieldWeave;
-DEINTERLACE_FUNC DeinterlaceFieldBob;
-DEINTERLACE_FUNC DeinterlaceFieldTwoFrame;
-DEINTERLACE_FUNC BlendedClipping;
+class CDeinterlaceInputPin : public CTransformInputPin
+{
+public:
+    CDeinterlaceInputPin(
+                            TCHAR* pObjectName,
+                            CDeinterlaceFilter* pFilter,
+                            HRESULT* phr,
+                            LPCWSTR pName
+                        );
 
-void memcpyBOBMMX(void *Dest1, void *Dest2, void *Src, size_t nBytes);
-long GetCombFactor(short** pLines1, short** pLines2);
-long CompareFields(short** pLines1, short** pLines2, RECT *rect);
+    // IMemInputPin
+    STDMETHOD(GetAllocator)(IMemAllocator ** ppAllocator);
+    STDMETHOD(NotifyAllocator)(IMemAllocator * pAllocator, BOOL bReadOnly);
+    STDMETHOD(GetAllocatorRequirements)(ALLOCATOR_PROPERTIES *pProps);
 
-extern long BitShift;
-extern long EdgeDetect;
-extern long JaggieThreshold;
-extern long DiffThreshold;
-extern long SpatialTolerance;
-extern long TemporalTolerance;
-extern long SimilarityThreshold;
+    // Allow the filter to see what allocator we have
+    // N.B. This does NOT AddRef
+    IMemAllocator * PeekAllocator()
+    {  
+        return m_pAllocator; 
+    }
 
+    // Pass this on downstream if it ever gets called.
+
+protected:
+    CDeinterlaceFilter* m_pDeinterlaceFilter;
+};
 
 #endif

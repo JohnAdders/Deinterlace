@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: memcpy.h,v 1.3 2001-11-13 13:51:43 adcockj Exp $
+// $Id: stdafx.h,v 1.1 2001-11-13 13:51:43 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -14,23 +14,20 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
+/////////////////////////////////////////////////////////////////////////////
+// CVS Log
 //
-//  In addition, as a special exception, John Adcock
-//  gives permission to link the code of this program with
-//  DirectShow Filter graph and distribute linked combinations including
-//  the two.  You must obey the GNU General Public License in all
-//  respects for all of the code used other than that which mapipulated 
-//  the filter graph. If you modify
-//  this file, you may extend this exception to your version of the
-//  file, but you are not obligated to do so.  If you do not wish to
-//  do so, delete this exception statement from your version.
-//
+// $Log: not supported by cvs2svn $
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef __MEMCPY_H__
-#define __MEMCPY_H__
-
-void _cdecl memcpyMMX(void *Dest, void *Src, size_t nBytes);
-void _cdecl memcpySSE(void *Dest, void *Src, size_t nBytes);
-
-#endif
+#include <windows.h>
+#include <windowsx.h>
+#include <atlbase.h>
+#include <streams.h>
+#include <dvdmedia.h>
+#include <commctrl.h>
+#include <olectl.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <tchar.h>

@@ -1,22 +1,37 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: CPU.cpp,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: CPU.cpp,v 1.3 2001-11-13 13:51:43 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 Tom Barry.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
-//	This file is subject to the terms of the GNU General Public License as
-//	published by the Free Software Foundation.  A copy of this license is
-//	included with this software distribution in the file COPYING.  If you
-//	do not have a copy, you may obtain a copy by writing to the Free
-//	Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+//  This file is subject to the terms of the GNU General Public License as
+//  published by the Free Software Foundation.  A copy of this license is
+//  included with this software distribution in the file COPYING.  If you
+//  do not have a copy, you may obtain a copy by writing to the Free
+//  Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //
-//	This software is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details
+//  This software is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details
+//
+//  In addition, as a special exception, John Adcock
+//  gives permission to link the code of this program with
+//  DirectShow Filter graph and distribute linked combinations including
+//  the two.  You must obey the GNU General Public License in all
+//  respects for all of the code used other than that which mapipulated 
+//  the filter graph. If you modify
+//  this file, you may extend this exception to your version of the
+//  file, but you are not obligated to do so.  If you do not wish to
+//  do so, delete this exception statement from your version.
+//
 ///////////////////////////////////////////////////////////////////////////////
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/01 11:04:19  adcockj
+// Updated headers
+// Checked in changes by Micheal Eskin and Hauppauge
+//
 /////////////////////////////////////////////////////////////////////////////
 // Change Log
 //
@@ -42,7 +57,7 @@
 // each feature.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <streams.h>
+#include "stdafx.h"
 #include "cpu.h"
 
 // Symbolic constants for feature flags in CPUID standard feature flags 
@@ -80,34 +95,39 @@
 
 UINT get_feature_flags(void)
 {
-   UINT result    = 0;
-   UINT signature = 0;
-	char vendor[13]        = "UnknownVendr";  /* Needs to be exactly 12 chars */
+    UINT result    = 0;
+    UINT signature = 0;
+    char vendor[13]        = "UnknownVendr";  /* Needs to be exactly 12 chars */
 
-   /* Define known vendor strings here */
+    /* Define known vendor strings here */
 
-   char vendorAMD[13]     = "AuthenticAMD";  /* Needs to be exactly 12 chars */
-   char vendorIntel[13]   = "GenuineIntel";  /* Needs to be exactly 12 chars */
+    char vendorAMD[13]     = "AuthenticAMD";  /* Needs to be exactly 12 chars */
+    char vendorIntel[13]   = "GenuineIntel";  /* Needs to be exactly 12 chars */
 
-   // Step 1: Check if processor has CPUID support. Processor faults
-   // with an illegal instruction exception if the instruction is not
-   // supported. This step catches the exception and immediately returns
-   // with feature string bits with all 0s, if the exception occurs.
-	__try {
-		__asm xor    eax, eax
-		__asm xor    ebx, ebx
-		__asm xor    ecx, ecx
-		__asm xor    edx, edx
-		__asm cpuid
-	}
+    // Step 1: Check if processor has CPUID support. Processor faults
+    // with an illegal instruction exception if the instruction is not
+    // supported. This step catches the exception and immediately returns
+    // with feature string bits with all 0s, if the exception occurs.
+    __try 
+    {
+        __asm 
+        {
+            xor eax, eax
+            xor ebx, ebx
+            xor ecx, ecx
+            xor edx, edx
+            cpuid
+        }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) 
+    {
+        return (0);
+    }
+    
+    result |= FEATURE_CPUID;
 
-	__except (EXCEPTION_EXECUTE_HANDLER) {
-		return (0);
-	}
-	
-	result |= FEATURE_CPUID;
-
-	_asm {
+    _asm 
+    {
          // Step 2: Check if CPUID supports function 1 (signature/std features)
          xor     eax, eax                      // CPUID function #0
          cpuid                                 // largest std func/vendor string
@@ -227,20 +247,20 @@ $has_mmxext:
 
          // Step 10: Check AMD-specific features not reported by CPUID
          // Check support for AMD-K6 processor-style MTRRs          
-         mov     eax, [signature] 	// get processor signature
-         and     eax, 0xFFF 		// extract family/model/stepping
-         cmp     eax, 0x588 		// CPU < AMD-K6-2/CXT ? CY : NC
-         sbb     edx, edx 		// CPU < AMD-K6-2/CXT ? 0xffffffff:0
-         not     edx 			// CPU < AMD-K6-2/CXT ? 0:0xffffffff
-         cmp     eax, 0x600 		// CPU < AMD Athlon ? CY : NC
-         sbb     ecx, ecx 		// CPU < AMD-K6 ? 0xffffffff:0
-         and     ecx, edx 		// (CPU>=AMD-K6-2/CXT)&& 
-					// (CPU<AMD Athlon) ? 0xffffffff:0
-         and     ecx, FEATURE_K6_MTRR 	// (CPU>=AMD-K6-2/CXT)&& 
-					// (CPU<AMD Athlon) ? FEATURE_K6_MTRR:0
-         or      [result], ecx 		// merge into feature flags
+         mov     eax, [signature]   // get processor signature
+         and     eax, 0xFFF         // extract family/model/stepping
+         cmp     eax, 0x588         // CPU < AMD-K6-2/CXT ? CY : NC
+         sbb     edx, edx       // CPU < AMD-K6-2/CXT ? 0xffffffff:0
+         not     edx            // CPU < AMD-K6-2/CXT ? 0:0xffffffff
+         cmp     eax, 0x600         // CPU < AMD Athlon ? CY : NC
+         sbb     ecx, ecx       // CPU < AMD-K6 ? 0xffffffff:0
+         and     ecx, edx       // (CPU>=AMD-K6-2/CXT)&& 
+                    // (CPU<AMD Athlon) ? 0xffffffff:0
+         and     ecx, FEATURE_K6_MTRR   // (CPU>=AMD-K6-2/CXT)&& 
+                    // (CPU<AMD Athlon) ? FEATURE_K6_MTRR:0
+         or      [result], ecx      // merge into feature flags
 
-         jmp     $all_done 		// desired features determined
+         jmp     $all_done      // desired features determined
 
 $not_AMD:
          // Extract features specific to non AMD CPUs (except SSE2 already done)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceProperties.h,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: DeinterlaceProperties.h,v 1.3 2001-11-13 13:51:43 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -15,33 +15,43 @@
 //	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //	GNU General Public License for more details
 //
+//  In addition, as a special exception, John Adcock
+//  gives permission to link the code of this program with
+//  DirectShow Filter graph and distribute linked combinations including
+//  the two.  You must obey the GNU General Public License in all
+//  respects for all of the code used other than that which mapipulated 
+//  the filter graph. If you modify
+//  this file, you may extend this exception to your version of the
+//  file, but you are not obligated to do so.  If you do not wish to
+//  do so, delete this exception statement from your version.
+//
 /////////////////////////////////////////////////////////////////////////////
-// DeinterlaceProperties.h
-/////////////////////////////////////////////////////////////////////////////
+
+#ifndef __DEINTERLACEPROPERTIES_H__
+#define __DEINTERLACEPROPERTIES_H__
+
+#include "IDeinterlace.h"
 
 class CDeinterlaceProperties : public CBasePropertyPage
 {
-
 public:
-
-    static CUnknown * WINAPI CreateInstance(LPUNKNOWN lpunk, HRESULT *phr);
+    static CUnknown* WINAPI CreateInstance(LPUNKNOWN lpunk, HRESULT* phr);
 
 private:
-
+    CDeinterlaceProperties(LPUNKNOWN lpunk, HRESULT* phr);
     BOOL OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-    HRESULT OnConnect(IUnknown *pUnknown);
+    HRESULT OnConnect(IUnknown* pUnknown);
     HRESULT OnDisconnect();
     HRESULT OnActivate();
     HRESULT OnDeactivate();
     HRESULT OnApplyChanges();
-
     void    GetControlValues();
 
-    CDeinterlaceProperties(LPUNKNOWN lpunk, HRESULT *phr);
-
+private:
     BOOL m_bIsInitialized;      // Used to ignore startup messages
     int m_DeinterlaceType;      // Which type of deinterlacing shall we do
-    IDeinterlace *m_pIDeinterlace;  // The custom interface on the filter
+    IDeinterlace* m_pIDeinterlace;  // The custom interface on the filter
+};
 
-}; // DeinterlaceProperties
 
+#endif

@@ -1,4 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
+// $Id: DS_plugin.h,v 1.2 2001-11-13 13:51:43 adcockj Exp $
+/////////////////////////////////////////////////////////////////////////////
+// A generic DScaler Deinterlace plugin wrapper class
+/////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 Peter Gubanov.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -13,26 +17,33 @@
 //	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //	GNU General Public License for more details
 //
+//  In addition, as a special exception, John Adcock
+//  gives permission to link the code of this program with
+//  DirectShow Filter graph and distribute linked combinations including
+//  the two.  You must obey the GNU General Public License in all
+//  respects for all of the code used other than that which mapipulated 
+//  the filter graph. If you modify
+//  this file, you may extend this exception to your version of the
+//  file, but you are not obligated to do so.  If you do not wish to
+//  do so, delete this exception statement from your version.
+//
 /////////////////////////////////////////////////////////////////////////////
-// DS_plugin.h
-/////////////////////////////////////////////////////////////////////////////
-// A generic DScaler Deinterlace plugin wrapper class
 
 #ifndef _DS_PLUGIN_H
 #define _DS_PLUGIN_H
 
-#include "../DScaler/Api/DS_Deinterlace.h"
-#include "../DScaler/Api/DS_Filter.h"
 #include "DI.h"
 
 //
 // Define basic interface for generic DScaler plugin
 //
-class DGenericDSPlugin {
+class DGenericDSPlugin 
+{
 public:
-	virtual ~DGenericDSPlugin() {};
+	virtual ~DGenericDSPlugin() 
+    {};
 	virtual void startStreaming() = NULL;
-	virtual void process(MY_DEINTERLACE_INFO *Info) = NULL;
+	virtual void process(DEINTERLACE_INFO *Info) = NULL;
 	virtual void stopStreaming() = NULL;
 	virtual void showSettingsDialog(HWND hwnd) = NULL;
 };
@@ -40,20 +51,21 @@ public:
 //
 // GreedyH Implementation
 //
-class DDeinterlaceGreedyH : public DGenericDSPlugin, public CCritSec {
-	HMODULE	m_hModule;
-	DEINTERLACE_METHOD	*m_pMethod;
-
-	BOOL m_fStreaming;
-
+class DDeinterlaceGreedyH : public DGenericDSPlugin, public CCritSec 
+{
 public:
 	DDeinterlaceGreedyH();
 	~DDeinterlaceGreedyH();
 
 	void startStreaming();
-	void process(MY_DEINTERLACE_INFO *Info);
+	void process(DEINTERLACE_INFO *Info);
 	void stopStreaming();
 	void showSettingsDialog(HWND hwnd);
+private:
+	HMODULE	m_hModule;
+	DEINTERLACE_METHOD* m_pMethod;
+	BOOL m_fStreaming;
+
 };
 
 #endif _DS_PLUGIN_H

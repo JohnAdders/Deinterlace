@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: cpu.h,v 1.3 2001-11-13 13:51:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 Tom Barry.  All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -14,7 +14,6 @@
 //	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //	GNU General Public License for more details
 ///////////////////////////////////////////////////////////////////////////////
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // This file contains #define directives that control compilation of CPU-specific
@@ -32,7 +31,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __CPU_H__
-#define __CPU_H__ 1
+#define __CPU_H__
 
 // Symbolic constants for CpuFeatureFlags TRB 12/00
 #define FEATURE_CPUID           0x00000001
@@ -50,10 +49,6 @@
 #define FEATURE_SSE				0x00002000
 #define FEATURE_SSE2            0x00004000
 
-//#define USE_SSE		1		// Use Intel Streaming SIMD Extensions
-//#define USE_3DNOW	1		// Use AMD 3DNow! extensions
-//#define USE_SSE2	1		// Use Intel SSE version 2 (Pentium 4 and above)
-
 UINT get_feature_flags(void);
 
-#endif /* __CPU_H__ */
+#endif

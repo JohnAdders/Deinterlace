@@ -1,3 +1,8 @@
+2001-11-13 John Adcock
+    Tidy up of code and made to mostly conform to coding standards 
+    Changed to use DScaler's structure throughout
+    Chhanged behaviour of history
+
 2001-11-10 Peter Gubanov
 	Poor framework to support DScaler plug-ins (namely, DI_GreedyH.dll),
 	support for VIDEOINFOHEADER2 and interlaced samples,
