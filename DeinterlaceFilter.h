@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.h,v 1.6 2001-12-13 16:53:28 adcockj Exp $
+// $Id: DeinterlaceFilter.h,v 1.7 2001-12-15 16:08:54 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -103,6 +103,8 @@ private:
     TPicture m_Pictures[4];
     int m_History;
     REFERENCE_TIME m_LastStop;
+    LONGLONG m_MediaStart;
+    LONGLONG m_MediaStop;
     BOOL m_bIsOddFieldFirst;
     CComBSTR m_PlugInName;
     BOOL m_RateDouble;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.10 2001-12-13 16:53:28 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.11 2001-12-15 16:08:54 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2001/12/13 16:53:28  adcockj
+// Improvements to processing with sources with allocators
+// that won't give us lots of history.  We should fail back properly
+//
 // Revision 1.9  2001/12/11 20:11:53  adcockj
 // Bug fixes
 //
@@ -270,6 +274,8 @@ HRESULT CDeinterlaceFilter::StartStreaming()
 
     m_History = 0;
     m_LastStop = -1;
+	m_MediaStart = 1;
+	m_MediaStop = 2;
 
     return CTransformFilter::StartStreaming();
 }
@@ -415,10 +421,6 @@ HRESULT CDeinterlaceFilter::GetOutputSampleBuffer(IMediaSample* pSample, IMediaS
     } 
     else 
     {
-        if (pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID) 
-        {
-            pOutSample->SetTime(&pProps->tStart, &pProps->tStop);
-        }
         if (pProps->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) 
         {
             pOutSample->SetSyncPoint(TRUE);
@@ -427,15 +429,6 @@ HRESULT CDeinterlaceFilter::GetOutputSampleBuffer(IMediaSample* pSample, IMediaS
         {
             pOutSample->SetDiscontinuity(TRUE);
             m_bSampleSkipped = FALSE;
-        }
-
-        // Copy the media times
-        // Will be updated later if needed
-        LONGLONG MediaStart;
-        LONGLONG MediaEnd;
-        if (pSample->GetMediaTime(&MediaStart,&MediaEnd) == NOERROR) 
-        {
-            pOutSample->SetMediaTime(&MediaStart,&MediaEnd);
         }
     }
     return S_OK;
@@ -476,31 +469,67 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStop;
     BYTE* pSourceBuffer;
+	BOOL IsTimeValid = TRUE;
+	BOOL IsMediaTimeValid = TRUE;
+	LONGLONG InputStart;
+	LONGLONG InputStop;
+    
+	// Copy the media times
+    // Will be updated later if needed
+    if (pSource->GetMediaTime(&InputStart,&InputStop) == NOERROR) 
+    {
+		IsMediaTimeValid = TRUE;
+    }
+	else
+	{
+		IsMediaTimeValid = FALSE;
+	}
 
     // Get the input stream times
-    if(FAILED(pSource->GetTime(&rtStart,&rtStop)))
+    if(SUCCEEDED(pSource->GetTime(&rtStart,&rtStop)))
     {
-        return E_FAIL;
+        IsTimeValid = TRUE;
     }
+	else
+	{
+        IsTimeValid = FALSE;
+		
+	}
 
     // Check for stream continuity
     // note that the IsDiscontinuity
     // method appears not to work
-    if (rtStart != m_LastStop) 
+    if (IsTimeValid) 
     {
-        DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
-        m_History = 0;
-        for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
-        {
-            m_pInputHistory[i] = NULL;
-        }
+		if(rtStart != m_LastStop)
+		{
+			DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
+			m_History = 0;
+			for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
+			{
+				m_pInputHistory[i] = NULL;
+			}
+		}
+	    m_LastStop = rtStop;
     }
-    m_LastStop = rtStop;
+	else
+	{
+		if(FAILED(pSource->IsDiscontinuity()))
+		{
+			DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
+			m_History = 0;
+			for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
+			{
+				m_pInputHistory[i] = NULL;
+			}
+		}
+		// force use of media time if we don't have sample time
+		IsMediaTimeValid = TRUE;
+	}
 
     pSource->GetPointer(&pSourceBuffer);
     
     AM_SAMPLE2_PROPERTIES*  const pProps = m_pInput->SampleProps();
-
 
     for (i=3; i > 0; --i) 
     {
@@ -555,8 +584,17 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
             Bob(&m_Info);
         }
 
-        rtStop = rtStart + (rtStop - rtStart)/2;
-        pDest->SetTime(&rtStart,&rtStop);
+		if(IsTimeValid)
+		{
+			REFERENCE_TIME tempStop = rtStart + (rtStop - rtStart)/2;
+			pDest->SetTime(&rtStart,&tempStop);
+		}
+		if(IsMediaTimeValid)
+		{
+			pDest->SetMediaTime(&m_MediaStart, &m_MediaStop);
+			++m_MediaStart;
+			++m_MediaStop;
+		}
 
         m_pOutput->Deliver(pDest);
 
@@ -605,11 +643,25 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     }
 
     // Time for second field
-    if(m_RateDouble)
-    {
-        rtStart = rtStart + (rtStop - rtStart + 1)/2;
-    }
-    pDest->SetTime(&rtStart,&rtStop);
+	if(IsTimeValid)
+	{
+		REFERENCE_TIME tempStart;
+		if(m_RateDouble)
+		{
+			tempStart = rtStart + (rtStop - rtStart)/2;
+		}
+		else
+		{
+			tempStart = rtStart;
+		}
+		pDest->SetTime(&tempStart,&rtStop);
+	}
+	if(IsMediaTimeValid)
+	{
+		pDest->SetMediaTime(&m_MediaStart, &m_MediaStop);
+		++m_MediaStart;
+		++m_MediaStop;
+	}
 
     m_pOutput->Deliver(pDest);
 
