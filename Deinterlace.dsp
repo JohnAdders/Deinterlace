@@ -161,6 +161,7 @@ DEP_CPP_DEINT=\
 	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\Deinterlace.h"\
 	".\Deinterlace_i.c"\
+	".\DeinterlaceAbout.h"\
 	".\DeinterlaceFilter.h"\
 	".\DeinterlaceProperties.h"\
 	".\DI.h"\
@@ -201,6 +202,10 @@ DEP_CPP_DEINT=\
 # End Source File
 # Begin Source File
 
+SOURCE=.\Deinterlace.def
+# End Source File
+# Begin Source File
+
 SOURCE=.\Deinterlace.idl
 
 !IF  "$(CFG)" == "Deinterlace - Win32 Release"
@@ -218,8 +223,48 @@ SOURCE=.\Deinterlace.idl
 # End Source File
 # Begin Source File
 
-SOURCE=.\DeinterlaceFilter.cpp
+SOURCE=.\DeinterlaceAbout.Cpp
 DEP_CPP_DEINTE=\
+	".\Deinterlace.h"\
+	".\DeinterlaceProperties.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"audevcod.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"dsschedule.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeinterlaceFilter.cpp
+DEP_CPP_DEINTER=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
@@ -267,7 +312,7 @@ DEP_CPP_DEINTE=\
 # Begin Source File
 
 SOURCE=.\DeinterlaceInputPin.cpp
-DEP_CPP_DEINTER=\
+DEP_CPP_DEINTERL=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
@@ -312,7 +357,7 @@ DEP_CPP_DEINTER=\
 # Begin Source File
 
 SOURCE=.\DeinterlaceProperties.Cpp
-DEP_CPP_DEINTERL=\
+DEP_CPP_DEINTERLA=\
 	".\Deinterlace.h"\
 	".\DeinterlaceProperties.h"\
 	".\stdafx.h"\
@@ -602,17 +647,7 @@ DEP_CPP_STDAF=\
 	{$(INCLUDE)}"wxlist.h"\
 	{$(INCLUDE)}"wxutil.h"\
 	
-
-!IF  "$(CFG)" == "Deinterlace - Win32 Release"
-
 # ADD CPP /Yc"stdafx.h"
-
-!ELSEIF  "$(CFG)" == "Deinterlace - Win32 Debug"
-
-# ADD CPP /Yc"stdafx.h"
-
-!ENDIF 
-
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -621,6 +656,10 @@ DEP_CPP_STDAF=\
 # Begin Source File
 
 SOURCE=.\cpu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeinterlaceAbout.h
 # End Source File
 # Begin Source File
 
@@ -668,11 +707,11 @@ SOURCE=.\Deinterlace.rc
 # PROP Default_Filter "*.txt"
 # Begin Source File
 
-SOURCE=.\Copying.txt
+SOURCE=.\Authors.txt
 # End Source File
 # Begin Source File
 
-SOURCE=.\Deinterlace.def
+SOURCE=.\Copying.txt
 # End Source File
 # Begin Source File
 

@@ -11,6 +11,7 @@
 #define IDC_DEINTERLACE                 1000
 #define IDB_DEFAULT                     1001
 #define IDS_TITLE                       1015
+#define IDS_ABOUT                       1016
 #define IDC_WEAVE                       1020
 #define IDC_BOB                         1021
 #define IDC_TYPE1                       1022

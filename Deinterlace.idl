@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.idl,v 1.2 2001-11-14 16:42:18 adcockj Exp $
+// $Id: Deinterlace.idl,v 1.3 2001-11-14 17:06:21 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/14 16:42:18  adcockj
+// Added support for any plugin
+//
 // Revision 1.1  2001/11/14 13:32:05  adcockj
 // Moved COM definitions into IDL
 //
@@ -93,6 +96,15 @@ library DeinterlaceLib
 		helpstring("DeinterlacePropertyPage Class")
 	]
 	coclass DeinterlacePropertyPage
+	{
+		[default] interface IPropertyPage;
+	};
+
+	[
+		uuid(B26BFF59-55BB-4a9e-94F9-56652554E42F),
+		helpstring("DeinterlaceAboutPage Class")
+	]
+	coclass DeinterlaceAboutPage
 	{
 		[default] interface IPropertyPage;
 	};

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.Cpp,v 1.11 2001-11-14 13:32:05 adcockj Exp $
+// $Id: Deinterlace.Cpp,v 1.12 2001-11-14 17:06:21 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2001/11/14 13:32:05  adcockj
+// Moved COM definitions into IDL
+//
 // Revision 1.10  2001/11/13 13:51:43  adcockj
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
@@ -65,6 +68,7 @@
 #include "Deinterlace_i.c"
 #include "DeinterlaceFilter.h"
 #include "DeinterlaceProperties.h"
+#include "DeinterlaceAbout.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Setup information
@@ -130,6 +134,13 @@ CFactoryTemplate g_Templates[] =
         L"Deinterlace Settings",
         &CLSID_DeinterlacePropertyPage,
         CDeinterlaceProperties::CreateInstance,
+        NULL,
+        NULL,
+    },
+    { 
+        L"About Deinterlace",
+        &CLSID_DeinterlaceAboutPage,
+        CDeinterlaceAbout::CreateInstance,
         NULL,
         NULL,
     }

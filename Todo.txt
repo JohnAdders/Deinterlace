@@ -10,7 +10,7 @@
 
    * Support free compliers not just MSVC
 
-   * Tie the filter to a deinterlace library (not created yet)
+   * Add support for DScaler Filters as well
 
    * Rewrite media type negotiation to use upstream filter's enumerator
      Pass all media type changes from a downstream filter upstream and

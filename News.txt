@@ -1,7 +1,15 @@
+2001-11-14 John Adcock
+    Made to support any input file
+    Changed COM stuff to use IDL
+    Added IsOddFieldFirst property
+    Added DScalerPlugInName property
+    Updated Dialog to support new settings
+    Added About box page to clean up interface
+
 2001-11-13 John Adcock
     Tidy up of code and made to mostly conform to coding standards 
     Changed to use DScaler's structure throughout
-    Chhanged behaviour of history
+    Changed behaviour of history
 
 2001-11-10 Peter Gubanov
 	Poor framework to support DScaler plug-ins (namely, DI_GreedyH.dll),

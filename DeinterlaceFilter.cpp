@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.5 2001-11-14 16:42:18 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.6 2001-11-14 17:06:21 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2001/11/14 16:42:18  adcockj
+// Added support for any plugin
+//
 // Revision 1.4  2001/11/14 13:42:22  adcockj
 // Fixed compile errors
 //
@@ -1046,13 +1049,14 @@ HRESULT CDeinterlaceFilter::ReadFromStream(IStream* pStream)
 /////////////////////////////////////////////////////////////////////////////
 STDMETHODIMP CDeinterlaceFilter::GetPages(CAUUID* pPages)
 {
-    pPages->cElems = 1;
-    pPages->pElems = (GUID*) CoTaskMemAlloc(sizeof(GUID));
+    pPages->cElems = 2;
+    pPages->pElems = (GUID*) CoTaskMemAlloc(2*sizeof(GUID));
     if (pPages->pElems == NULL)
     {
         return E_OUTOFMEMORY;
     }
-    *(pPages->pElems) = CLSID_DeinterlacePropertyPage;
+    *(pPages->pElems) = CLSID_DeinterlaceAboutPage;
+    *(pPages->pElems + 1) = CLSID_DeinterlacePropertyPage;
     return NOERROR;
 }
 

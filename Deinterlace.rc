@@ -51,32 +51,40 @@ END
 // Dialog
 //
 
-IDD_DEINTERLACEPROP DIALOG DISCARDABLE  0, 0, 231, 173
+IDD_DEINTERLACEPROP DIALOG DISCARDABLE  0, 0, 231, 109
 STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Deinterlace Type",IDS_STATIC,6,78,222,38
-    CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,13,100,41,12
-    CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,13,88,44, 12
+    GROUPBOX        "Deinterlace Type",IDS_STATIC,6,5,222,38
+    CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,13,26,41,12
+    CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,13,14,44,
+                    12
     CONTROL         "Blended Clipping",IDC_TYPE2,"Button",BS_AUTORADIOBUTTON,
-                    61,100,83,12
-    CONTROL         "Two Frame",IDC_TYPE1,"Button",BS_AUTORADIOBUTTON,61,88,
+                    61,26,83,12
+    CONTROL         "Two Frame",IDC_TYPE1,"Button",BS_AUTORADIOBUTTON,61,14,
                     84,12
-    CONTROL         "Field Bob",IDC_TYPE3,"Button",BS_AUTORADIOBUTTON,146,88, 45,10
-    CONTROL         "Use DScaler Plug-in",IDC_TYPE4,"Button", BS_AUTORADIOBUTTON,146,101,79,10
-
-    CTEXT           "Deinterlace DirectShow Filter",IDS_STATIC,0,0,230,10
-    CTEXT           "Copyright (c) 2000-01 John Adcock, Peter Gubanov, Tom Barry, Steve Grimm, Mark Rejhon, Michael Eskin",
-                    IDS_STATIC,5,12,225,21
-    LTEXT           "Deinterlace.ax comes with ABSOLUTELY NO WARRANTY.  This software in licenced under the terms of the GNU GPL for details see http://www.fsf.net/copyleft/gpl.html",
-                    IDS_STATIC,1,32,220,25
-    LTEXT           "The home page for this project is http://www.dscaler.org/",
-                    IDS_STATIC,0,63,220,11
+    CONTROL         "Field Bob",IDC_TYPE3,"Button",BS_AUTORADIOBUTTON,146,14,
+                    45,10
+    CONTROL         "Use DScaler Plug-in",IDC_TYPE4,"Button",
+                    BS_AUTORADIOBUTTON,146,27,79,10
     CONTROL         "Is Odd Field First",IDC_ODDFIELDFIRST,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,8,121,118,11
-    COMBOBOX        IDC_PLUGINS,6,148,211,63,CBS_DROPDOWN | WS_VSCROLL | 
+                    BS_AUTOCHECKBOX | WS_TABSTOP,8,47,118,11
+    COMBOBOX        IDC_PLUGINS,8,85,211,63,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "DScaler Plug-ins",IDS_STATIC,8,136,96,8
+    LTEXT           "DScaler Plug-ins",IDS_STATIC,9,69,96,8
+END
+
+IDD_DEINTERLACEABOUT DIALOG DISCARDABLE  0, 0, 231, 71
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Deinterlace DirectShow Filter",-1,0,0,230,10
+    CTEXT           "Copyright (c) 2000-01 John Adcock, Peter Gubanov, Tom Barry, Steve Grimm, Mark Rejhon, Michael Eskin",
+                    -1,5,12,225,21
+    LTEXT           "Deinterlace.ax comes with ABSOLUTELY NO WARRANTY.  This software in licenced under the terms of the GNU GPL for details see http://www.fsf.net/copyleft/gpl.html",
+                    -1,1,32,220,25
+    LTEXT           "The home page for this project is http://www.dscaler.org/",
+                    -1,0,60,220,11
 END
 
 
@@ -139,7 +147,12 @@ BEGIN
     IDD_DEINTERLACEPROP, DIALOG
     BEGIN
         RIGHTMARGIN, 230
-        BOTTOMMARGIN, 127
+        BOTTOMMARGIN, 107
+    END
+
+    IDD_DEINTERLACEABOUT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 230
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -153,6 +166,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TITLE               "Deinterlace Settings"
+    IDS_ABOUT               "About Deinterlace"
 END
 
 #endif    // English (U.K.) resources

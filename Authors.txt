@@ -9,7 +9,7 @@ Steve Grimm - Wrote the two frame alogorithm
 
 Peter Gubanov - Make the whole thing work by taking on the project.
 
-Mark Rejhon - Supplid many bug fixes and improvements to the alogorthms and code.
+Mark Rejhon - Supplied many bug fixes and improvements to the alogorthms and code.
 
 Michael Eskin - Made this work with the WDM drivers for Connexant video cards
 
