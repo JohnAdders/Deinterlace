@@ -65,7 +65,7 @@ BEGIN
     CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,13,88,44,
                     12
     LTEXT           "Deinterlace DirectShow Filter",IDS_STATIC,68,0,94,10
-    CTEXT           "Copyright (c) 2000-01 John Adcock, Peter Gubanov, Tom Barry, Steve Grimm, Mark Rejhon, Micheal Eskin",
+    CTEXT           "Copyright (c) 2000-01 John Adcock, Peter Gubanov, Tom Barry, Steve Grimm, Mark Rejhon, Michael Eskin",
                     IDS_STATIC,3,12,225,21
     LTEXT           "Deinterlace.ax comes with ABSOLUTELY NO WARRANTY.  This software in licenced under the terms of the GNU GPL for details see http://www.fsf.net/copyleft/gpl.html",
                     IDS_STATIC,1,32,220,25
