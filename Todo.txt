@@ -12,3 +12,6 @@
    * Think about Mark Rejhon's 3/2 pulldown filter as well
 
    * Support free compliers not just MSVC
+
+   * Tie the filter to a deinterlace library (not created yet)
+
