@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.12 2002-01-14 12:56:04 pgubanov Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.13 2002-03-09 10:48:52 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2002/01/14 12:56:04  pgubanov
+// Fixed locking policy for Deinterlace() method to prevent deadlock when brinning up property page in paused state
+//
 // Revision 1.11  2001/12/15 16:08:54  adcockj
 // Changes for ShowShifter compability
 //
@@ -107,7 +110,7 @@ CDeinterlaceFilter::CDeinterlaceFilter(TCHAR* tszName, LPUNKNOWN punk, HRESULT* 
     m_bIsOddFieldFirst(TRUE),
     m_History(0),
     m_RateDouble(FALSE),
-    m_HistoryAllowed(4)
+    m_HistoryAllowed(MAX_FRAMES_IN_HISTORY)
 {
     memset(&m_Info, 0, sizeof(m_Info));
     DbgSetModuleLevel(LOG_ERROR, 5);
@@ -691,7 +694,8 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     {
         if(m_HistoryAllowed > 1)
         {
-            for (int i = m_HistoryAllowed; i > 0; --i)
+			ASSERT(m_HistoryAllowed < MAX_FRAMES_IN_HISTORY+1);
+            for (int i = m_HistoryAllowed-1; i > 0; --i)
             {
                 m_pInputHistory[i] = m_pInputHistory[i - 1];
             }

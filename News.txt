@@ -1,3 +1,6 @@
+2002-03-09 Peter Gubanov
+	FIX: Access violation in StopStreaming()
+
 2002-01-14 Peter Gubanov
 	Happy New Year!
 	Fixed locking policy for Deinterlace() method to prevent
