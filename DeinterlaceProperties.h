@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceProperties.h,v 1.3 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DeinterlaceProperties.h,v 1.4 2001-11-14 13:32:05 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@
 #ifndef __DEINTERLACEPROPERTIES_H__
 #define __DEINTERLACEPROPERTIES_H__
 
-#include "IDeinterlace.h"
+#include "Deinterlace.h"
 
 class CDeinterlaceProperties : public CBasePropertyPage
 {
@@ -49,7 +49,7 @@ private:
 
 private:
     BOOL m_bIsInitialized;      // Used to ignore startup messages
-    int m_DeinterlaceType;      // Which type of deinterlacing shall we do
+    long m_DeinterlaceType;      // Which type of deinterlacing shall we do
     IDeinterlace* m_pIDeinterlace;  // The custom interface on the filter
 };
 

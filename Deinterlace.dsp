@@ -160,11 +160,10 @@ DEP_CPP_DEINT=\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\Deinterlace.h"\
+	".\Deinterlace_i.c"\
 	".\DeinterlaceFilter.h"\
-	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
 	".\DI.h"\
-	".\IDeinterlace.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
@@ -176,6 +175,7 @@ DEP_CPP_DEINT=\
 	{$(INCLUDE)}"dllsetup.h"\
 	{$(INCLUDE)}"dsschedule.h"\
 	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"guiddef.h"\
 	{$(INCLUDE)}"measure.h"\
 	{$(INCLUDE)}"msgthrd.h"\
 	{$(INCLUDE)}"mtype.h"\
@@ -201,18 +201,35 @@ DEP_CPP_DEINT=\
 # End Source File
 # Begin Source File
 
+SOURCE=.\Deinterlace.idl
+
+!IF  "$(CFG)" == "Deinterlace - Win32 Release"
+
+# ADD MTL /h "Deinterlace.h" /iid "Deinterlace_i.c" /Oicf
+# SUBTRACT MTL /D "NDEBUG" /mktyplib203
+
+!ELSEIF  "$(CFG)" == "Deinterlace - Win32 Debug"
+
+# ADD MTL /h "Deinterlace.h" /iid "Deinterlace_i.c" /Oicf
+# SUBTRACT MTL /D "_DEBUG" /mktyplib203
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\DeinterlaceFilter.cpp
 DEP_CPP_DEINTE=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\cpu.h"\
+	".\Deinterlace.h"\
 	".\DeinterlaceFilter.h"\
 	".\DeinterlaceGuids.h"\
 	".\DeinterlaceInputPin.h"\
 	".\DI.h"\
 	".\DS_plugin.h"\
-	".\IDeinterlace.h"\
 	".\memcpy.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
@@ -255,10 +272,10 @@ DEP_CPP_DEINTER=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
+	".\Deinterlace.h"\
 	".\DeinterlaceFilter.h"\
 	".\DeinterlaceInputPin.h"\
 	".\DI.h"\
-	".\IDeinterlace.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
@@ -561,15 +578,7 @@ SOURCE=.\cpu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Deinterlace.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\DeinterlaceFilter.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\DeinterlaceGuids.h
 # End Source File
 # Begin Source File
 
@@ -586,10 +595,6 @@ SOURCE=.\DI.h
 # Begin Source File
 
 SOURCE=.\DS_plugin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\IDeinterlace.h
 # End Source File
 # Begin Source File
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.Cpp,v 1.10 2001-11-13 13:51:43 adcockj Exp $
+// $Id: Deinterlace.Cpp,v 1.11 2001-11-14 13:32:05 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2001/11/13 13:51:43  adcockj
+// Tidy up code and made to mostly conform to coding standards
+// Changed history behaviour
+// Made to use DEINTERLACE_INFO throughout
+//
 // Revision 1.9  2001/11/10 10:35:01  pgubanov
 // Correct handling of interlace flags, GreedyH now works fine.
 //
@@ -56,8 +61,8 @@
 
 #include "stdafx.h"
 #include <initguid.h>
-#include "DeinterlaceGuids.h"
 #include "Deinterlace.h"
+#include "Deinterlace_i.c"
 #include "DeinterlaceFilter.h"
 #include "DeinterlaceProperties.h"
 

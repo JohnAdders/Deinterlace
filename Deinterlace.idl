@@ -1,0 +1,88 @@
+/////////////////////////////////////////////////////////////////////////////
+// $Id: Deinterlace.idl,v 1.1 2001-11-14 13:32:05 adcockj Exp $
+/////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2000 John Adcock.  All rights reserved.
+/////////////////////////////////////////////////////////////////////////////
+//
+//	This file is subject to the terms of the GNU General Public License as
+//	published by the Free Software Foundation.  A copy of this license is
+//	included with this software distribution in the file COPYING.txt.  If you
+//	do not have a copy, you may obtain a copy by writing to the Free
+//	Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+//	This software is distributed in the hope that it will be useful,
+//	but WITHOUT ANY WARRANTY; without even the implied warranty of
+//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//	GNU General Public License for more details
+//
+//  In addition, as a special exception, John Adcock
+//  gives permission to link the code of this program with
+//  DirectShow Filter graph and distribute linked combinations including
+//  the two.  You must obey the GNU General Public License in all
+//  respects for all of the code used other than that which mapipulated 
+//  the filter graph. If you modify
+//  this file, you may extend this exception to your version of the
+//  file, but you are not obligated to do so.  If you do not wish to
+//  do so, delete this exception statement from your version.
+//
+/////////////////////////////////////////////////////////////////////////////
+// CVS Log
+//
+// $Log: not supported by cvs2svn $
+/////////////////////////////////////////////////////////////////////////////
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+/////////////////////////////////////////////////////////////////////////////
+// this file defines the GUIDs that the filter will register under
+// 
+// if you wish to ship this filter with another product and do not
+// want to interfeer with any future changes to the public
+// veriosn of this filter please generate new GUID values
+// for all the values below
+/////////////////////////////////////////////////////////////////////////////
+
+
+[
+	object,
+	uuid(463D645C-48F7-11d4-8464-0008C782A257),
+	helpstring("IDeinterlace Interface"),
+	pointer_default(unique)
+]
+interface IDeinterlace : IUnknown
+{
+    [propget, id(1), helpstring("property DeinterlaceType")] 
+    HRESULT DeinterlaceType([out, retval] long *pVal);
+    [propput, id(1), helpstring("property DeinterlaceType")] 
+    HRESULT DeinterlaceType([in] long newVal);
+};
+
+[
+	uuid(7B08AC97-2997-4D9D-BE7B-8DB876944E54),
+	version(1.0),
+	helpstring("Deinterlace 1.0 Type Library")
+]
+library DeinterlaceLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(463D645D-48F7-11d4-8464-0008C782A257),
+		helpstring("Deinterlace Class")
+	]
+	coclass Deinterlace
+	{
+		[default] interface IDeinterlace;
+	};
+
+	[
+		uuid(463D645E-48F7-11d4-8464-0008C782A257),
+		helpstring("DeinterlacePropertyPage Class")
+	]
+	coclass DeinterlacePropertyPage
+	{
+		[default] interface IPropertyPage;
+	};
+};

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.2 2001-11-14 08:03:42 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.3 2001-11-14 13:32:05 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/14 08:03:42  adcockj
+// Fixed alignment problems
+//
 // Revision 1.1  2001/11/13 13:51:43  adcockj
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
@@ -1003,7 +1006,7 @@ STDMETHODIMP CDeinterlaceFilter::GetPages(CAUUID *pPages)
 // get_DeinterlaceType
 // Return the current effect selected
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(int *piType)
+STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(long* piType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
     CheckPointer(piType,E_POINTER);
@@ -1016,7 +1019,7 @@ STDMETHODIMP CDeinterlaceFilter::get_DeinterlaceType(int *piType)
 // put_DeinterlaceType
 // Set the required video effect
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlaceFilter::put_DeinterlaceType(int iType)
+STDMETHODIMP CDeinterlaceFilter::put_DeinterlaceType(long iType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
     m_DeinterlaceType = iType;

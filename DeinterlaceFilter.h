@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.h,v 1.1 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DeinterlaceFilter.h,v 1.2 2001-11-14 13:32:05 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@
 #ifndef __DEINTERLACEFILTER_H__
 #define __DEINTERLACEFILTER_H__
 
-#include "IDeinterlace.h"
+#include "Deinterlace.h"
 #include "DI.h"
 
 #define MAX_FRAMES_IN_HISTORY	2
@@ -69,8 +69,8 @@ public:
     HRESULT StopStreaming();
 
 	// These implement the custom IIPEffect interface
-    STDMETHODIMP get_DeinterlaceType(int *IPEffect);
-    STDMETHODIMP put_DeinterlaceType(int IPEffect);
+    STDMETHOD(get_DeinterlaceType)(long *IPEffect);
+    STDMETHOD(put_DeinterlaceType)(long IPEffect);
 
     // ISpecifyPropertyPages interface
     STDMETHODIMP GetPages(CAUUID *pPages);
