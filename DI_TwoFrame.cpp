@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DI_TwoFrame.cpp,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: DI_TwoFrame.cpp,v 1.3 2001-11-09 15:34:27 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 Steven Grimm.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/01 11:04:19  adcockj
+// Updated headers
+// Checked in changes by Micheal Eskin and Hauppauge
+//
 /////////////////////////////////////////////////////////////////////////////
 // Change Log
 //
@@ -31,8 +35,9 @@
 #include "DI.h"
 //#include "globals.h"
 #include "cpu.h"
+#include "memcpy.h"
 
-static BOOL TwoFrameSSE(DEINTERLACE_INFO *info);
+static BOOL TwoFrameSSE(MY_DEINTERLACE_INFO *info);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Deinterlace the latest field, attempting to weave wherever it won't cause
@@ -76,7 +81,7 @@ static BOOL TwoFrameSSE(DEINTERLACE_INFO *info);
 // difference of 127, whose square (16129) is safely comparable.
 
 
-BOOL DeinterlaceFieldTwoFrame(DEINTERLACE_INFO *info)
+BOOL DeinterlaceFieldTwoFrame(MY_DEINTERLACE_INFO *info)
 {
 	int Line;
 	short* YVal0;
@@ -314,7 +319,7 @@ DoNext8Bytes:
 // would be to decouple the inline assembly section from the surrounding
 // logic.
 
-static BOOL TwoFrameSSE(DEINTERLACE_INFO *info)
+static BOOL TwoFrameSSE(MY_DEINTERLACE_INFO *info)
 {
 	int Line;
 	short* YVal0;
@@ -344,9 +349,9 @@ static BOOL TwoFrameSSE(DEINTERLACE_INFO *info)
 
 	// copy first even line no matter what, and the first odd line if we're
 	// processing an even field.
-	memcpyMMX(info->Overlay, info->EvenLines[0][0], info->LineLength);
+	memcpySSE(info->Overlay, info->EvenLines[0][0], info->LineLength);
 	if (! info->IsOdd)
-		memcpyMMX(info->Overlay + info->OverlayPitch, info->OddLines[0][0], info->LineLength);
+		memcpySSE(info->Overlay + info->OverlayPitch, info->OddLines[0][0], info->LineLength);
 
 	for (Line = 0; Line < info->FieldHeight - 1; ++Line)
 	{
@@ -374,7 +379,7 @@ static BOOL TwoFrameSSE(DEINTERLACE_INFO *info)
 		// Always use the most recent data verbatim.  By definition it's correct (it'd
 		// be shown on an interlaced display) and our job is to fill in the spaces
 		// between the new lines.
-		memcpyMMX(Dest, YVal2, info->LineLength);
+		memcpySSE(Dest, YVal2, info->LineLength);
 		Dest -= info->OverlayPitch;
 
 
@@ -518,7 +523,7 @@ DoNext8Bytes:
 	// Copy last odd line if we're processing an odd field.
 	if (info->IsOdd)
 	{
-		memcpyMMX(info->Overlay + (info->FrameHeight - 1) * info->OverlayPitch,
+		memcpySSE(info->Overlay + (info->FrameHeight - 1) * info->OverlayPitch,
 				  info->OddLines[info->FieldHeight - 1],
 				  info->LineLength);
 	}

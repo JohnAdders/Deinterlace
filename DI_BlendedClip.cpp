@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DI_BlendedClip.cpp,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: DI_BlendedClip.cpp,v 1.3 2001-11-09 15:34:27 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 Tom Barry.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/01 11:04:19  adcockj
+// Updated headers
+// Checked in changes by Micheal Eskin and Hauppauge
+//
 /////////////////////////////////////////////////////////////////////////////
 // Change Log
 //
@@ -32,6 +36,7 @@
 #include <streams.h>
 #include "DI.h"
 #include "cpu.h"
+#include "memcpy.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Blended Clipping Deinterlace - Tom Barry 11/09/2000
@@ -195,7 +200,7 @@
 	BOOL	BlcWantsToFlip;
 
 
-BOOL BlendedClipping(DEINTERLACE_INFO *info)
+BOOL BlendedClipping(MY_DEINTERLACE_INFO *info)
 {
 	int Line;
 	int	LoopCtr;

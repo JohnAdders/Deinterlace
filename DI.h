@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DI.h,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: DI.h,v 1.3 2001-11-09 15:34:27 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -64,19 +64,18 @@ typedef struct {
 	// Number of scanlines per field.  FrameHeight / 2, mostly for
 	// cleanliness so we don't have to keep dividing FrameHeight by 2.
 	int FieldHeight;
-} DEINTERLACE_INFO;
+} MY_DEINTERLACE_INFO;
 
 // Deinterlace functions return true if the overlay is ready to be displayed.
-typedef BOOL (DEINTERLACE_FUNC)(DEINTERLACE_INFO *info);
+typedef BOOL (MY_DEINTERLACE_FUNC)(MY_DEINTERLACE_INFO *info);
 
-DEINTERLACE_FUNC Bob;
-DEINTERLACE_FUNC Weave;
-DEINTERLACE_FUNC DeinterlaceFieldWeave;
-DEINTERLACE_FUNC DeinterlaceFieldBob;
-DEINTERLACE_FUNC DeinterlaceFieldTwoFrame;
-DEINTERLACE_FUNC BlendedClipping;
+MY_DEINTERLACE_FUNC Bob;
+MY_DEINTERLACE_FUNC Weave;
+MY_DEINTERLACE_FUNC DeinterlaceFieldWeave;
+MY_DEINTERLACE_FUNC DeinterlaceFieldBob;
+MY_DEINTERLACE_FUNC DeinterlaceFieldTwoFrame;
+MY_DEINTERLACE_FUNC BlendedClipping;
 
-void memcpyMMX(void *Dest, void *Src, size_t nBytes);
 void memcpyBOBMMX(void *Dest1, void *Dest2, void *Src, size_t nBytes);
 long GetCombFactor(short** pLines1, short** pLines2);
 long CompareFields(short** pLines1, short** pLines2, RECT *rect);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DI_BobAndWeave.cpp,v 1.2 2001-11-01 11:04:19 adcockj Exp $
+// $Id: DI_BobAndWeave.cpp,v 1.3 2001-11-09 15:34:27 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 // Based on code from Virtual Dub Plug-in by Gunnar Thalin
@@ -19,6 +19,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/01 11:04:19  adcockj
+// Updated headers
+// Checked in changes by Micheal Eskin and Hauppauge
+//
 /////////////////////////////////////////////////////////////////////////////
 // Change Log
 //
@@ -31,6 +35,7 @@
 #include <streams.h>
 #include "di.h"
 #include "cpu.h"
+#include "memcpy.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // DeinterlaceFieldBob
@@ -42,7 +47,7 @@
 // Deinterlace - area based Vitual Dub Plug-in by
 // Gunnar Thalin
 ///////////////////////////////////////////////////////////////////////////////
-BOOL DeinterlaceFieldBob(DEINTERLACE_INFO *info)
+BOOL DeinterlaceFieldBob(MY_DEINTERLACE_INFO *info)
 {
 	int Line;
 	short* YVal1;
@@ -194,7 +199,7 @@ DoNext8Bytes:
 //
 // The algorithm is described in comments below.
 //
-BOOL DeinterlaceFieldWeave(DEINTERLACE_INFO *info)
+BOOL DeinterlaceFieldWeave(MY_DEINTERLACE_INFO *info)
 {
 	int Line;
 	short* YVal1;
@@ -448,7 +453,7 @@ EndCopyLoop:
 // Simple Bob.  Copies the most recent field to the overlay, with each scanline
 // copied twice.
 /////////////////////////////////////////////////////////////////////////////
-BOOL Bob(DEINTERLACE_INFO *info)
+BOOL Bob(MY_DEINTERLACE_INFO *info)
 {
 	int i;
 	BYTE *lpOverlay = info->Overlay;
@@ -475,7 +480,7 @@ BOOL Bob(DEINTERLACE_INFO *info)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Simple Weave.  Copies alternating scanlines from the most recent fields.
-BOOL Weave(DEINTERLACE_INFO *info)
+BOOL Weave(MY_DEINTERLACE_INFO *info)
 {
 	int i;
 	BYTE *lpOverlay = info->Overlay;

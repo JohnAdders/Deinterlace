@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.Cpp,v 1.7 2001-11-09 11:42:39 pgubanov Exp $
+// $Id: Deinterlace.Cpp,v 1.8 2001-11-09 15:34:27 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -19,6 +19,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2001/11/09 11:42:39  pgubanov
+// Output 2 frames for each inout frame. Doesn't care about input media type too much - just assume all input samples are frames. Never connect to anything except YUY2.
+//
 // Revision 1.6  2001/11/01 11:04:19  adcockj
 // Updated headers
 // Checked in changes by Micheal Eskin and Hauppauge
@@ -52,7 +55,7 @@
 #include "resource.h"
 
 #include "DI.h"
-
+#include "DS_plugin.h"
 
 #define MAX_INPUT_LINES_PER_FIELD	2048
 
@@ -181,7 +184,8 @@ STDAPI DllUnregisterServer()
 CDeinterlace::CDeinterlace(TCHAR *tszName, LPUNKNOWN punk, HRESULT *phr) :
     CTransformFilter(tszName, punk, CLSID_Deinterlace),
     m_DeinterlaceType(IDC_TYPE1),
-    CPersistStream(punk, phr)
+    CPersistStream(punk, phr),
+	m_pDeinterlacePlugin(NULL)
 {
 }
 
@@ -269,6 +273,10 @@ HRESULT CDeinterlace::StartStreaming()
 	for (int i=0;i<MAX_FRAMES_IN_HISTORY;i++)
 		m_pInputHistory[i] = NULL;
 
+	m_pDeinterlacePlugin = new DDeinterlaceGreedyH();
+	if (m_pDeinterlacePlugin)
+		m_pDeinterlacePlugin->startStreaming();
+
 	return CTransformFilter::StartStreaming();
 }
 
@@ -280,6 +288,12 @@ HRESULT CDeinterlace::StopStreaming()
 {
 	for (int i=0;i<MAX_FRAMES_IN_HISTORY;i++) {
 		m_pInputHistory[i] = NULL;
+	}
+
+	if (m_pDeinterlacePlugin) {
+		m_pDeinterlacePlugin->stopStreaming();
+		delete m_pDeinterlacePlugin;
+		m_pDeinterlacePlugin = NULL;
 	}
 
 	return CTransformFilter::StopStreaming();
@@ -340,109 +354,6 @@ long TemporalTolerance = 300;
 long SpatialTolerance = 600;
 long SimilarityThreshold = 25;
 
-/////////////////////////////////////////////////////////////////////////////
-// memcpyMMX
-// Uses MMX instructions to move memory around
-// does as much as we can in 64 byte chunks (128-byte on SSE machines)
-// using MMX instructions
-// then copies any extra bytes
-// assumes there will be at least 64 bytes to copy
-// This code was originally from Borg's bTV plugin SDK 
-/////////////////////////////////////////////////////////////////////////////
-void memcpyMMX(void *Dest, void *Src, size_t nBytes)
-{
-#ifdef USE_SSE
-	// On SSE machines, we can use the 128-bit floating-point registers and
-	// bypass write caching to copy a bit faster.  The destination has to be
-	// 16-byte aligned.  
-	if ((CpuFeatureFlags & FEATURE_SSE) && (((long) Dest) & 15) == 0)
-	__asm {
-		mov		esi, dword ptr[Src]
-		mov		edi, dword ptr[Dest]
-		mov		ecx, nBytes
-		shr     ecx, 7                      // nBytes / 128
-align 8
-CopyLoopSSE:
-		// movaps would be slightly more efficient but the capture data
-		// isn't reliably 16-byte aligned.
-		movups	xmm0, xmmword ptr[esi]
-		movups	xmm1, xmmword ptr[esi+16*1]
-		movups	xmm2, xmmword ptr[esi+16*2]
-		movups	xmm3, xmmword ptr[esi+16*3]
-		movups	xmm4, xmmword ptr[esi+16*4]
-		movups	xmm5, xmmword ptr[esi+16*5]
-		movups	xmm6, xmmword ptr[esi+16*6]
-		movups	xmm7, xmmword ptr[esi+16*7]
-		movntps	xmmword ptr[edi], xmm0
-		movntps	xmmword ptr[edi+16*1], xmm1
-		movntps	xmmword ptr[edi+16*2], xmm2
-		movntps	xmmword ptr[edi+16*3], xmm3
-		movntps	xmmword ptr[edi+16*4], xmm4
-		movntps	xmmword ptr[edi+16*5], xmm5
-		movntps	xmmword ptr[edi+16*6], xmm6
-		movntps	xmmword ptr[edi+16*7], xmm7
-		add		esi, 128
-		add		edi, 128
-		loop CopyLoopSSE
-		mov		ecx, nBytes
-		and     ecx, 127
-		cmp     ecx, 0
-		je EndCopyLoopSSE
-align 8
-CopyLoop2SSE:
-		mov dl, byte ptr[esi] 
-		mov byte ptr[edi], dl
-		inc esi
-		inc edi
-		dec ecx
-		jne near CopyLoop2SSE
-EndCopyLoopSSE:
-		emms
-	}
-	else
-#endif /* USE_SSE */
-	__asm {
-		mov		esi, dword ptr[Src]
-		mov		edi, dword ptr[Dest]
-		mov		ecx, nBytes
-		shr     ecx, 6                      // nBytes / 64
-align 8
-CopyLoop:
-		movq	mm0, qword ptr[esi]
-		movq	mm1, qword ptr[esi+8*1]
-		movq	mm2, qword ptr[esi+8*2]
-		movq	mm3, qword ptr[esi+8*3]
-		movq	mm4, qword ptr[esi+8*4]
-		movq	mm5, qword ptr[esi+8*5]
-		movq	mm6, qword ptr[esi+8*6]
-		movq	mm7, qword ptr[esi+8*7]
-		movq	qword ptr[edi], mm0
-		movq	qword ptr[edi+8*1], mm1
-		movq	qword ptr[edi+8*2], mm2
-		movq	qword ptr[edi+8*3], mm3
-		movq	qword ptr[edi+8*4], mm4
-		movq	qword ptr[edi+8*5], mm5
-		movq	qword ptr[edi+8*6], mm6
-		movq	qword ptr[edi+8*7], mm7
-		add		esi, 64
-		add		edi, 64
-		loop CopyLoop
-		mov		ecx, nBytes
-		and     ecx, 63
-		cmp     ecx, 0
-		je EndCopyLoop
-align 8
-CopyLoop2:
-		mov dl, byte ptr[esi] 
-		mov byte ptr[edi], dl
-		inc esi
-		inc edi
-		dec ecx
-		jne near CopyLoop2
-EndCopyLoop:
-		emms
-	}
-}
 
 // Set up our output sample
 HRESULT
@@ -624,7 +535,7 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 	//
 	// Initialize a deinterlacer method
 	//
-	DEINTERLACE_INFO info;
+	MY_DEINTERLACE_INFO info;
 
 	short *OddLines[2][MAX_INPUT_LINES_PER_FIELD];
 	short *EvenLines[2][MAX_INPUT_LINES_PER_FIELD];
@@ -647,6 +558,17 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 		EvenLines[1][i] = (short*)(pPrevSourceBuffer+(2*i)*info.LineLength);
 		OddLines[1][i] = (short*)(pPrevSourceBuffer+(2*i+1)*info.LineLength);
 	}
+
+	//
+	// i == info.FieldHeight
+	// Fill extra entry past last pair of fields with the last pair -
+	// this is a workaround for some deinterlacing algos
+	//
+	EvenLines[0][i] = (short*)(pSourceBuffer+(2*i)*info.LineLength);
+	OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*info.LineLength);
+	EvenLines[1][i] = (short*)(pPrevSourceBuffer+(2*i)*info.LineLength);
+	OddLines[1][i] = (short*)(pPrevSourceBuffer+(2*i+1)*info.LineLength);
+
 	info.OddLines[0] = OddLines[0];
 	info.EvenLines[0] = EvenLines[0];
 	info.OddLines[1] = OddLines[1];
@@ -754,7 +676,7 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 // Call apropriate deinterlace method
 //
 void
-CDeinterlace::callDeinterlaceMethod(DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) const
+CDeinterlace::callDeinterlaceMethod(MY_DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) const
 {
     switch (m_DeinterlaceType) {
 	case IDC_WEAVE:
@@ -766,8 +688,10 @@ CDeinterlace::callDeinterlaceMethod(DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) 
 		break;
 	case IDC_TYPE1:
 		// Let it be two frame
-		if (fHistoryValid)
-			DeinterlaceFieldTwoFrame(pInfo);
+//		if (fHistoryValid)
+//			DeinterlaceFieldTwoFrame(pInfo);
+		if (fHistoryValid && m_pDeinterlacePlugin)
+			m_pDeinterlacePlugin->process(pInfo);
 		else
 			Bob(pInfo);
 		break;

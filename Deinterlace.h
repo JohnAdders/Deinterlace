@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.h,v 1.4 2001-11-09 11:42:38 pgubanov Exp $
+// $Id: Deinterlace.h,v 1.5 2001-11-09 15:34:27 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -28,6 +28,7 @@
 
 #define MAX_FRAMES_IN_HISTORY	2
 
+class DGenericDSPlugin;
 class CDeinterlace : public CTransformFilter,
 		 public IDeinterlace,
 		 public ISpecifyPropertyPages,
@@ -77,13 +78,15 @@ private:
 
 	HRESULT getOutputSampleBuffer(IMediaSample *pSource,IMediaSample **ppOutput);
     HRESULT deinterlace(IMediaSample *pIn);
-	void callDeinterlaceMethod(DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) const;
+	void callDeinterlaceMethod(MY_DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) const;
 
 
     CCritSec	m_DeinterlaceLock;  // Private play critical section
     int         m_DeinterlaceType;  // Which type of deinterlacing shall we do
 
 	CComPtr<IMediaSample> m_pInputHistory[MAX_FRAMES_IN_HISTORY];
+
+	DGenericDSPlugin *m_pDeinterlacePlugin;
 };
 
 // ==================================================

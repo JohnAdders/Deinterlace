@@ -155,10 +155,15 @@ DEP_CPP_CPU_C=\
 
 SOURCE=.\Deinterlace.cpp
 DEP_CPP_DEINT=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
+	"..\DScaler\Api\DS_Filter.h"\
 	".\Deinterlace.h"\
 	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
 	".\DI.h"\
+	".\DS_plugin.h"\
 	".\IDeinterlace.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
@@ -200,6 +205,7 @@ DEP_CPP_DEINTE=\
 	".\Deinterlace.h"\
 	".\DeinterlaceGuids.h"\
 	".\DeinterlaceProperties.h"\
+	".\DI.h"\
 	".\IDeinterlace.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
@@ -240,6 +246,7 @@ SOURCE=.\DI_BlendedClip.cpp
 DEP_CPP_DI_BL=\
 	".\cpu.h"\
 	".\DI.h"\
+	".\memcpy.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -279,6 +286,52 @@ SOURCE=.\DI_BobAndWeave.cpp
 DEP_CPP_DI_BO=\
 	".\cpu.h"\
 	".\DI.h"\
+	".\memcpy.h"\
+	{$(INCLUDE)}"amextra.h"\
+	{$(INCLUDE)}"amfilter.h"\
+	{$(INCLUDE)}"audevcod.h"\
+	{$(INCLUDE)}"cache.h"\
+	{$(INCLUDE)}"combase.h"\
+	{$(INCLUDE)}"cprop.h"\
+	{$(INCLUDE)}"ctlutil.h"\
+	{$(INCLUDE)}"dllsetup.h"\
+	{$(INCLUDE)}"dsschedule.h"\
+	{$(INCLUDE)}"fourcc.h"\
+	{$(INCLUDE)}"measure.h"\
+	{$(INCLUDE)}"msgthrd.h"\
+	{$(INCLUDE)}"mtype.h"\
+	{$(INCLUDE)}"outputq.h"\
+	{$(INCLUDE)}"pstream.h"\
+	{$(INCLUDE)}"refclock.h"\
+	{$(INCLUDE)}"reftime.h"\
+	{$(INCLUDE)}"renbase.h"\
+	{$(INCLUDE)}"source.h"\
+	{$(INCLUDE)}"streams.h"\
+	{$(INCLUDE)}"strmctl.h"\
+	{$(INCLUDE)}"sysclock.h"\
+	{$(INCLUDE)}"transfrm.h"\
+	{$(INCLUDE)}"transip.h"\
+	{$(INCLUDE)}"videoctl.h"\
+	{$(INCLUDE)}"vtrans.h"\
+	{$(INCLUDE)}"winctrl.h"\
+	{$(INCLUDE)}"winutil.h"\
+	{$(INCLUDE)}"wxdebug.h"\
+	{$(INCLUDE)}"wxlist.h"\
+	{$(INCLUDE)}"wxutil.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=.\DI_GreedyH.cpp
+DEP_CPP_DI_GR=\
+	"..\DScaler\Api\DS_ApiCommon.h"\
+	"..\DScaler\Api\DS_Control.h"\
+	"..\DScaler\Api\DS_Deinterlace.h"\
+	"..\DScaler\Api\DS_Filter.h"\
+	".\cpu.h"\
+	".\DI.h"\
+	".\DS_plugin.h"\
+	".\memcpy.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -318,6 +371,7 @@ SOURCE=.\DI_TwoFrame.cpp
 DEP_CPP_DI_TW=\
 	".\cpu.h"\
 	".\DI.h"\
+	".\memcpy.h"\
 	{$(INCLUDE)}"amextra.h"\
 	{$(INCLUDE)}"amfilter.h"\
 	{$(INCLUDE)}"audevcod.h"\
@@ -351,6 +405,13 @@ DEP_CPP_DI_TW=\
 	{$(INCLUDE)}"wxutil.h"\
 	
 # End Source File
+# Begin Source File
+
+SOURCE=.\memcpy.cpp
+DEP_CPP_MEMCP=\
+	".\memcpy.h"\
+	
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -377,7 +438,15 @@ SOURCE=.\DI.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DS_plugin.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\IDeinterlace.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\memcpy.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
