@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.6 2001-11-14 17:06:21 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.7 2001-11-28 09:45:56 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2001/11/14 17:06:21  adcockj
+// Added About Page
+//
 // Revision 1.5  2001/11/14 16:42:18  adcockj
 // Added support for any plugin
 //
@@ -223,16 +226,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     }
 
     // Get output BITMAPINFOHEADER
-    LPBITMAPINFOHEADER pbiOut;
-    if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) 
-    {
-        pbiOut = &(((VIDEOINFOHEADER*)m_pOutput->CurrentMediaType().Format())->bmiHeader);
-    }
-    else if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) 
-    {
-        pbiOut = &(((VIDEOINFOHEADER2*)m_pOutput->CurrentMediaType().Format())->bmiHeader);
-    }
-    m_Info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
+	FixOverlayPitch();
 
     m_Info.FieldDiff = -1;
     m_Info.CombFactor = -1;
@@ -365,6 +359,7 @@ HRESULT CDeinterlaceFilter::GetOutputSampleBuffer(IMediaSample* pSample, IMediaS
         CMediaType cmt(*pmt);
         DeleteMediaType(pmt);
         m_pOutput->SetMediaType(&cmt);
+		FixOverlayPitch();
     }
 
     //
@@ -628,91 +623,25 @@ void CDeinterlaceFilter::CallDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Copy
-// Make destination properties the same as source
+// FixOverlayPitch
+// Called every time output format changes - we need to update OverlayPitch
 /////////////////////////////////////////////////////////////////////////////
-#if 0
-HRESULT CDeinterlaceFilter::CopyProperties(IMediaSample* pSource, IMediaSample* pDest) const
+void CDeinterlaceFilter::FixOverlayPitch()
 {
-    // Copy the sample times
-
-    REFERENCE_TIME TimeStart, TimeEnd;
-    if (NOERROR == pSource->GetTime(&TimeStart, &TimeEnd))
+    // Get output BITMAPINFOHEADER
+    LPBITMAPINFOHEADER pbiOut;
+    if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) 
     {
-        pDest->SetTime(&TimeStart, &TimeEnd);
+        pbiOut = &(((VIDEOINFOHEADER*)m_pOutput->CurrentMediaType().Format())->bmiHeader);
     }
-
-    LONGLONG MediaStart, MediaEnd;
-    if (pSource->GetMediaTime(&MediaStart,&MediaEnd) == NOERROR)
+    else if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) 
     {
-        pDest->SetMediaTime(&MediaStart,&MediaEnd);
+        pbiOut = &(((VIDEOINFOHEADER2*)m_pOutput->CurrentMediaType().Format())->bmiHeader);
     }
+    m_Info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
 
-    // Copy the Sync point property
-
-    HRESULT hr = pSource->IsSyncPoint();
-    if (hr == S_OK)
-    {
-        pDest->SetSyncPoint(TRUE);
-    }
-    else if (hr == S_FALSE)
-    {
-        pDest->SetSyncPoint(FALSE);
-    }
-    else
-    {  
-        // an unexpected error has occured...
-        return E_UNEXPECTED;
-    }
-
-    // Copy the media type
-
-    AM_MEDIA_TYPE* pMediaType;
-    pSource->GetMediaType(&pMediaType);
-    pDest->SetMediaType(pMediaType);
-    DeleteMediaType(pMediaType);
-
-    // Copy the preroll property
-
-    hr = pSource->IsPreroll();
-    if (hr == S_OK)
-    {
-        pDest->SetPreroll(TRUE);
-    }
-    else if (hr == S_FALSE)
-    {
-        pDest->SetPreroll(FALSE);
-    }
-    else
-    {  // an unexpected error has occured...
-        return E_UNEXPECTED;
-    }
-
-    // Copy the discontinuity property
-
-    hr = pSource->IsDiscontinuity();
-    if (hr == S_OK)
-    {
-        pDest->SetDiscontinuity(TRUE);
-    }
-    else if (hr == S_FALSE)
-    {
-        pDest->SetDiscontinuity(FALSE);
-    }
-    else
-    {  
-        // an unexpected error has occured...
-        return E_UNEXPECTED;
-    }
-
-    // Copy the actual data length
-    long lDataLength = pSource->GetActualDataLength();
-    pDest->SetActualDataLength(lDataLength);
-
-    return NOERROR;
-
+	return;
 }
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CheckInputType
@@ -857,7 +786,7 @@ HRESULT CDeinterlaceFilter::DecideBufferSize(IMemAllocator* pAlloc,ALLOCATOR_PRO
         return hr;
     }
 
-    ASSERT( Actual.cBuffers == 1 );
+//    ASSERT( Actual.cBuffers == 1 );
 
     if (pProperties->cBuffers > Actual.cBuffers || pProperties->cbBuffer > Actual.cbBuffer)
     {

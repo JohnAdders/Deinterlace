@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.h,v 1.3 2001-11-14 16:42:18 adcockj Exp $
+// $Id: DeinterlaceFilter.h,v 1.4 2001-11-28 09:45:56 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -88,6 +88,7 @@ private:
     HRESULT Deinterlace(IMediaSample* pIn);
 	void CallDeinterlaceMethod(DEINTERLACE_INFO* pInfo) const;
 
+	void FixOverlayPitch();
 
     CCritSec	m_DeinterlaceLock;  // Private play critical section
     int         m_DeinterlaceType;  // Which type of deinterlacing shall we do
