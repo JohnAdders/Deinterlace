@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.idl,v 1.4 2001-12-11 17:31:58 adcockj Exp $
+// $Id: Deinterlace.idl,v 1.5 2001-12-13 16:53:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,12 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2001/12/11 17:31:58  adcockj
+// Added new GUIDs to avoid clash with hauppauge version
+// Fixed breaking of COM interface rules by adding IDeinterlace2
+// Added new setting to control Refresh rate doubling
+// Test of code to allow deinterlacing even if we get very little history
+//
 // Revision 1.3  2001/11/14 17:06:21  adcockj
 // Added About Page
 //
@@ -63,11 +69,7 @@ import "ocidl.idl";
 /////////////////////////////////////////////////////////////////////////////
 [
 	object,
-#ifdef HAUPPAUGE_BUILD
 	uuid(463D645C-48F7-11d4-8464-0008C782A257),
-#else
-	uuid(304030C4-4283-4e5a-8268-D0A68AC79EAD),
-#endif
 	helpstring("IDeinterlace Interface"),
 	pointer_default(unique)
 ]
@@ -95,11 +97,7 @@ interface IDeinterlace : IUnknown
 /////////////////////////////////////////////////////////////////////////////
 [
 	object,
-#ifdef HAUPPAUGE_BUILD
 	uuid(7402D283-1AA1-4bbb-B2D7-9B677270D531),
-#else
-	uuid(9BEFC65D-1EB8-402e-B277-AD10949E9C19),
-#endif
 	helpstring("IDeinterlace2 Interface"),
 	pointer_default(unique)
 ]

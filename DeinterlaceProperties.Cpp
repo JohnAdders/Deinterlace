@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceProperties.Cpp,v 1.6 2001-12-11 17:31:58 adcockj Exp $
+// $Id: DeinterlaceProperties.Cpp,v 1.7 2001-12-13 16:53:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,12 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2001/12/11 17:31:58  adcockj
+// Added new GUIDs to avoid clash with hauppauge version
+// Fixed breaking of COM interface rules by adding IDeinterlace2
+// Added new setting to control Refresh rate doubling
+// Test of code to allow deinterlacing even if we get very little history
+//
 // Revision 1.5  2001/11/14 16:42:18  adcockj
 // Added support for any plugin
 //
@@ -127,6 +133,7 @@ HRESULT CDeinterlaceProperties::OnConnect(IUnknown *pUnknown)
     m_pIDeinterlace->get_DeinterlaceType(&m_DeinterlaceType);
     m_pIDeinterlace->get_IsOddFieldFirst(&m_OddFieldFirst);
     m_pIDeinterlace->get_DScalerPluginName(&m_PluginName);
+    m_pIDeinterlace->get_RefreshRateDouble(&m_RateDouble);
     m_bIsInitialized = FALSE ;
     return NOERROR;
 }

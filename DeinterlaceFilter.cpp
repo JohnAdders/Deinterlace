@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.9 2001-12-11 20:11:53 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.10 2001-12-13 16:53:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2001/12/11 20:11:53  adcockj
+// Bug fixes
+//
 // Revision 1.8  2001/12/11 17:31:58  adcockj
 // Added new GUIDs to avoid clash with hauppauge version
 // Fixed breaking of COM interface rules by adding IDeinterlace2
@@ -57,6 +60,9 @@
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
 // Made to use DEINTERLACE_INFO throughout
+//
+/////////////////////////////////////////////////////////////////////////////
+// Log from old Deinterlace.cpp
 //
 // Revision 1.9  2001/11/10 10:35:01  pgubanov
 // Correct handling of interlace flags, GreedyH now works fine.
@@ -93,7 +99,8 @@ CDeinterlaceFilter::CDeinterlaceFilter(TCHAR* tszName, LPUNKNOWN punk, HRESULT* 
     m_pDeinterlacePlugin(NULL),
     m_bIsOddFieldFirst(TRUE),
     m_History(0),
-    m_RateDouble(TRUE)
+    m_RateDouble(FALSE),
+    m_HistoryAllowed(4)
 {
     memset(&m_Info, 0, sizeof(m_Info));
     DbgSetModuleLevel(LOG_ERROR, 5);
@@ -351,14 +358,14 @@ HRESULT CDeinterlaceFilter::GetOutputSampleBuffer(IMediaSample* pSample, IMediaS
     }
 
     HRESULT hr = m_pOutput->GetDeliveryBuffer(&pOutSample,
-        pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID ? &pProps->tStart : NULL,
-        pProps->dwSampleFlags & AM_SAMPLE_STOPVALID ? &pProps->tStop : NULL,
+        /*pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID ? &pProps->tStart :*/ NULL,
+        /*pProps->dwSampleFlags & AM_SAMPLE_STOPVALID ? &pProps->tStop : */ NULL,
         dwFlags);
 
-   * ppOutput = pOutSample;
+    *ppOutput = pOutSample;
     if (FAILED(hr)) 
     {
-       * ppOutput = NULL;
+        *ppOutput = NULL;
         return hr;
     }
 
@@ -488,14 +495,6 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
             m_pInputHistory[i] = NULL;
         }
     }
-    else
-    {
-        for (int i = 1; i < MAX_FRAMES_IN_HISTORY; i++)
-        {
-            m_pInputHistory[i - 1] = m_pInputHistory[i];
-        }
-    }
-    //m_pInputHistory[MAX_FRAMES_IN_HISTORY - 1] = pSource;
     m_LastStop = rtStop;
 
     pSource->GetPointer(&pSourceBuffer);
@@ -518,7 +517,10 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
         m_Pictures[0].pData = pSourceBuffer;
         m_Pictures[0].Flags = PICTURE_INTERLACED_EVEN;
     }
-    ++m_History;
+    if(m_History < (m_HistoryAllowed * 2 + 1))
+    {
+        ++m_History;
+    }
 
    
     // Call deinterlace method and deliver samples
@@ -588,7 +590,10 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
         m_Pictures[0].pData = pSourceBuffer + m_Info.InputPitch / 2;
         m_Pictures[0].Flags = PICTURE_INTERLACED_ODD;
     }
-    ++m_History;
+    if(m_History < (m_HistoryAllowed * 2 + 2))
+    {
+        ++m_History;
+    }
 
     if(m_History > 3)
     {
@@ -609,6 +614,24 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     m_pOutput->Deliver(pDest);
 
     pDest->Release();
+
+
+    // keep history
+    if(m_HistoryAllowed > 0)
+    {
+        if(m_HistoryAllowed > 1)
+        {
+            for (int i = m_HistoryAllowed; i > 0; --i)
+            {
+                m_pInputHistory[i] = m_pInputHistory[i - 1];
+            }
+        }
+        // always hold current source
+        // if we can
+        m_pInputHistory[0] = pSource;
+    }
+
+
     return NOERROR;
 }
 
@@ -1074,4 +1097,9 @@ STDMETHODIMP CDeinterlaceFilter::put_RefreshRateDouble(VARIANT_BOOL RateDouble)
     CAutoLock cAutolock(&m_DeinterlaceLock);
     m_RateDouble = (RateDouble == VARIANT_TRUE);
     return NOERROR;
+}
+
+void CDeinterlaceFilter::SetHistoryAllowed(int HistoryAllowed)
+{
+    m_HistoryAllowed = HistoryAllowed;
 }

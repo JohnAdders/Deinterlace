@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.h,v 1.5 2001-12-11 17:31:58 adcockj Exp $
+// $Id: DeinterlaceFilter.h,v 1.6 2001-12-13 16:53:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -83,6 +83,7 @@ public:
     // ISpecifyPropertyPages interface
     STDMETHOD(GetPages)(CAUUID* pPages);
 
+    void SetHistoryAllowed(int HistoryAllowed);
 
 private:
     // Constructor
@@ -105,6 +106,7 @@ private:
     BOOL m_bIsOddFieldFirst;
     CComBSTR m_PlugInName;
     BOOL m_RateDouble;
+    int m_HistoryAllowed;
 };
 
 #endif

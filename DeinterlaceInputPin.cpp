@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceInputPin.cpp,v 1.2 2001-12-11 17:31:58 adcockj Exp $
+// $Id: DeinterlaceInputPin.cpp,v 1.3 2001-12-13 16:53:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,12 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/12/11 17:31:58  adcockj
+// Added new GUIDs to avoid clash with hauppauge version
+// Fixed breaking of COM interface rules by adding IDeinterlace2
+// Added new setting to control Refresh rate doubling
+// Test of code to allow deinterlacing even if we get very little history
+//
 // Revision 1.1  2001/11/13 13:51:43  adcockj
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
@@ -94,9 +100,22 @@ STDMETHODIMP CDeinterlaceInputPin::GetAllocator(IMemAllocator ** ppAllocator)
         }
 
         hr = (*ppAllocator)->SetProperties(&Props,&Actual);
-        if (SUCCEEDED(hr) && Actual.cBuffers < MAX_FRAMES_IN_HISTORY+1)
+        if(FAILED(hr))
         {
-            hr = E_FAIL;
+            // oh well never mind we'll just have to get by with what we've got
+            if (Actual.cBuffers < MAX_FRAMES_IN_HISTORY + 1)
+            {
+                // if we haven't got enough history reset the Allowed History
+                // note that we can only hole one less than the actual number of buffers
+                // otherwise we prevent the source actually getting a new one
+                // to give us
+                m_pDeinterlaceFilter->SetHistoryAllowed(Actual.cBuffers - 1);
+            }
+            else
+            {
+                m_pDeinterlaceFilter->SetHistoryAllowed(MAX_FRAMES_IN_HISTORY);
+            }
+            hr = S_OK;
         }
     }
 
@@ -116,11 +135,17 @@ STDMETHODIMP CDeinterlaceInputPin::NotifyAllocator(IMemAllocator * pAllocator, B
     {
         ALLOCATOR_PROPERTIES Props;
         m_pAllocator->GetProperties(&Props);
-        if (Props.cBuffers < MAX_FRAMES_IN_HISTORY+1)
+        if (Props.cBuffers < MAX_FRAMES_IN_HISTORY + 1)
         {
-            // if we haven't got enough history reset the 
-            m_pDeinterlaceFilter->put_RefreshRateDouble(VARIANT_FALSE);
-            m_pDeinterlaceFilter->put_DeinterlaceType(IDC_TYPE3);
+            // if we haven't got enough history reset the Allowed History
+            // note that we can only hole one less than the actual number of buffers
+            // otherwise we prevent the source actually getting a new one
+            // to give us
+            m_pDeinterlaceFilter->SetHistoryAllowed(Props.cBuffers - 1);
+        }
+        else
+        {
+            m_pDeinterlaceFilter->SetHistoryAllowed(MAX_FRAMES_IN_HISTORY);
         }
     }
 
@@ -138,7 +163,8 @@ STDMETHODIMP CDeinterlaceInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES
     pProps->cbAlign = 8;
     pProps->cbBuffer = 0;
     pProps->cbPrefix = 0;
-    pProps->cBuffers = MAX_FRAMES_IN_HISTORY+4;  // JBC 9/20/01 we drop frames if to few buffers
+    // JBC 9/20/01 we drop frames if too few buffers
+    pProps->cBuffers = MAX_FRAMES_IN_HISTORY+4;
     
     return NOERROR;
 }
