@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: memcpy.cpp,v 1.3 2001-11-13 13:51:43 adcockj Exp $
+// $Id: memcpy.cpp,v 1.4 2001-11-14 08:03:42 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/11/13 13:51:43  adcockj
+// Tidy up code and made to mostly conform to coding standards
+// Changed history behaviour
+// Made to use DEINTERLACE_INFO throughout
+//
 // Revision 1.2  2001/11/10 10:35:01  pgubanov
 // Correct handling of interlace flags, GreedyH now works fine.
 //
@@ -56,7 +61,7 @@
 // assumes there will be at least 64 bytes to copy
 // This code was originally from Borg's bTV plugin SDK 
 /////////////////////////////////////////////////////////////////////////////
-void _cdecl memcpyMMX(void *Dest, void *Src, size_t nBytes)
+void __cdecl memcpyMMX(void *Dest, void *Src, size_t nBytes)
 {
     __asm 
     {
@@ -107,7 +112,7 @@ EndCopyLoop:
 // bypass write caching to copy a bit faster.  The destination has to be
 // 16-byte aligned.  
 /////////////////////////////////////////////////////////////////////////////
-void _cdecl memcpySSE(void *Dest, void *Src, size_t nBytes)
+void __cdecl memcpySSE(void *Dest, void *Src, size_t nBytes)
 {
     __asm 
     {

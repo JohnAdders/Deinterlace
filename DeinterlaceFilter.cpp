@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.1 2001-11-13 13:51:43 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.2 2001-11-14 08:03:42 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2001/11/13 13:51:43  adcockj
+// Tidy up code and made to mostly conform to coding standards
+// Changed history behaviour
+// Made to use DEINTERLACE_INFO throughout
+//
 // Revision 1.9  2001/11/10 10:35:01  pgubanov
 // Correct handling of interlace flags, GreedyH now works fine.
 //
@@ -462,7 +467,7 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
     
     AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
 
-    if(pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
+    if(!(pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST))
     {
         for (i=0;i<m_Info.FieldHeight;i++) 
         {
@@ -531,7 +536,7 @@ HRESULT CDeinterlaceFilter::deinterlace(IMediaSample *pSource)
 
     m_Info.Overlay = pDestBuffer;
 
-    if(pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
+    if(!(pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST))
     {
         for (i=0;i<m_Info.FieldHeight;i++) 
         {
@@ -800,7 +805,7 @@ HRESULT CDeinterlaceFilter::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PRO
         {
             pProperties->cbBuffer = InProps.cbBuffer;
             pProperties->cBuffers = 1;
-            pProperties->cbAlign = InProps.cbAlign;
+            //pProperties->cbAlign = InProps.cbAlign;
         }
         else
         {
@@ -813,7 +818,7 @@ HRESULT CDeinterlaceFilter::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PRO
     }
 
     ASSERT(pProperties->cbBuffer);
-    ASSERT(pProperties->cbAlign >= 8);
+    //ASSERT(pProperties->cbAlign >= 8);
 
     // Ask the allocator to reserve us some sample memory, NOTE the function
     // can succeed (that is return NOERROR) but still not have allocated the
