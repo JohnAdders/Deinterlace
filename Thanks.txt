@@ -1,0 +1,13 @@
+Deinterlace Thanks file
+
+The following people have submitted code to the project
+
+	John Adcock (john@adcock8.freeserve.co.uk) got the ball rolling 
+	by creating a shell for experimentation around the DirectShow
+	Sample ezrgb24
+
+
+Special Thanks goto
+
+	All in the Home Theater Computer the AV Science forum (http://www.avsforum.com/)
+	for being knowledgable, helpful and friendly.

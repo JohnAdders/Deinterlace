@@ -1,0 +1,14 @@
+
+ TODO:
+   
+   * Find a good way of deinterlacing video. :)
+
+   * Build a player app that includes the filter
+
+   * Find out what formats are required to support the majority of suitable capture cards
+
+   * Optimize
+
+   * Think about Mark Rejhon's 3/2 pulldown filter as well
+
+   * Support free compliers not just MSVC
