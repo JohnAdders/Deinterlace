@@ -1,3 +1,6 @@
+2001-11-01 John Adcock
+    Checked in version to ship with Hauppauge XP drivers
+
 2001-09-20 Michael Eskin
     Got working with WDM video card drivers
 

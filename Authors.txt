@@ -1,8 +1,15 @@
-Authors of id3lib.
+The following people have submitted code to the project
 
-Dirk Mahoney originally designed and implemented id3lib.
-Scott Haug (eldamitri@users.sourceforge.net) is the current project maintainer.
+John Adcock - got the ball rolling by creating a shell for experimentation
+              around theDirectShow sample ezrgb24
 
-Please see the THANKS file for an incomplete list of the many others who have
-contributed patches and fixes.
+Tom Barry - His code is used for CPU detection and the blended clip alogorithm
+
+Steve Grimm - Wrote the two frame alogorithm
+
+Peter Gubanov - Make the whole thing work by taking on the project.
+
+Mark Rejhon - Supplid many bug fixes and improvements to the alogorthms and code.
+
+Michael Eskin - Made this work with the WDM drivers for Connexant video cards
 
