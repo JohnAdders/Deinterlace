@@ -19,6 +19,7 @@
 
 #include <windows.h>
 #include <streams.h>
+#include <dvdmedia.h>
 #include <initguid.h>
 #if (1100 > _MSC_VER)
 #include <olectlid.h>
@@ -103,7 +104,24 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 /////////////////////////////////////////////////////////////////////////////
 STDAPI DllRegisterServer()
 {
-    return AMovieDllRegisterServer2(TRUE);
+    // Create entry in HKEY_CLASSES_ROOT\Filter
+    OLECHAR szCLSID[CHARS_IN_GUID];
+    TCHAR achTemp[MAX_PATH];
+    HKEY hKey;
+
+    HRESULT hr = AMovieDllRegisterServer2( TRUE );
+    if (SUCCEEDED(hr))
+    {
+        // Incompatible way to register:
+        // ActiveMovie uses Filter\* tree to find its filters
+        StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
+        wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
+        // create key
+        RegCreateKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp, &hKey);
+        RegCloseKey(hKey);
+    }
+
+    return hr;
 }
 
 
@@ -114,7 +132,21 @@ STDAPI DllRegisterServer()
 /////////////////////////////////////////////////////////////////////////////
 STDAPI DllUnregisterServer()
 {
-    return AMovieDllRegisterServer2(FALSE);
+    HRESULT hr = AMovieDllRegisterServer2( FALSE );
+    if (SUCCEEDED(hr))
+    {
+        // Incompatible way to unregister:
+        // Delete entry in HKEY_CLASSES_ROOT\Filter
+        OLECHAR szCLSID[CHARS_IN_GUID];
+        TCHAR achTemp[MAX_PATH];
+
+        StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
+        wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
+        // remove key
+        RegDeleteKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp);
+    }
+
+    return hr;
 }
 
 
@@ -135,7 +167,7 @@ CDeinterlace::CDeinterlace(TCHAR *tszName, LPUNKNOWN punk, HRESULT *phr) :
 /////////////////////////////////////////////////////////////////////////////
 CUnknown *CDeinterlace::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
-    CDeinterlace *pNewObject = new CDeinterlace(NAME("Image Effects"), punk, phr);
+    CDeinterlace *pNewObject = new CDeinterlace(NAME("Deinterlace Filer"), punk, phr);
     if (pNewObject == NULL)
 	{
         *phr = E_OUTOFMEMORY;
@@ -186,6 +218,8 @@ STDMETHODIMP CDeinterlace::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 /////////////////////////////////////////////////////////////////////////////
 HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 {
+#pragma message (REMIND("Implement own Receive() to handle previous frames"))
+
     // Copy the properties across
     HRESULT hr = CopyProperties(pSource, pDest);
     if (FAILED(hr))
@@ -340,7 +374,8 @@ HRESULT CDeinterlace::CopyProperties(IMediaSample *pSource, IMediaSample *pDest)
 HRESULT CDeinterlace::CheckInputType(const CMediaType *mtIn)
 {
 	// check this is a VIDEOINFOHEADER type
-	if (*mtIn->FormatType() != FORMAT_VideoInfo)
+	if ((*mtIn->FormatType() != FORMAT_VideoInfo)/* &&
+		(*mtIn->FormatType() != FORMAT_VIDEOINFO2)*/)
 	{
 		return E_INVALIDARG;
 	}
@@ -423,6 +458,8 @@ HRESULT CDeinterlace::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIE
 /////////////////////////////////////////////////////////////////////////////
 HRESULT CDeinterlace::GetMediaType(int iPosition, CMediaType *pMediaType)
 {
+#pragma message (REMIND("Need to use upstream filter enumerator and act only on supported mediatypes"))
+
     // Is the input pin connected
     if (m_pInput->IsConnected() == FALSE)
 	{
@@ -441,10 +478,9 @@ HRESULT CDeinterlace::GetMediaType(int iPosition, CMediaType *pMediaType)
         return VFW_S_NO_MORE_ITEMS;
     }
 
-	// copy format from input pin
+    // copy format from input pin
     *pMediaType = m_pInput->CurrentMediaType();
-	VIDEOINFOHEADER* pFormat = (VIDEOINFOHEADER*)pMediaType->Format();
-	pMediaType->SetFormat((BYTE*)pFormat, sizeof(VIDEOINFOHEADER));
+	pMediaType->SetFormat(pMediaType->Format(), pMediaType->FormatLength());
     return NOERROR;
 
 }
@@ -458,12 +494,20 @@ BOOL CDeinterlace::CanPerformDeinterlace(const CMediaType *pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
 	{
-        if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB24) ||
-			IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_YUY2))
-		{
-            VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pMediaType->Format();
-            return (pvi->bmiHeader.biBitCount == 24);
+		LPBITMAPINFOHEADER pbi;
+		if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VideoInfo)) {
+			pbi = &(((VIDEOINFOHEADER *)pMediaType->Format())->bmiHeader);
+		}
+		else if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VIDEOINFO2)) {
+			pbi = &(((VIDEOINFOHEADER2 *)pMediaType->Format())->bmiHeader);
+		}
+
+        if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB24)) {
+            return (pbi->biBitCount == 24);
         }
+//		else if(IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_YUY2)) {
+//			return (pbi->biBitCount == 16);
+//		}
     }
     return FALSE;
 }
@@ -524,11 +568,11 @@ STDMETHODIMP CDeinterlace::GetPages(CAUUID *pPages)
 // get_DeinterlaceType
 // Return the current effect selected
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlace::get_DeinterlaceType(int *IPEffect)
+STDMETHODIMP CDeinterlace::get_DeinterlaceType(int *piType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
-    CheckPointer(IPEffect,E_POINTER);
-    *IPEffect = m_DeinterlaceType;
+    CheckPointer(piType,E_POINTER);
+    *piType = m_DeinterlaceType;
     return NOERROR;
 }
 
@@ -537,10 +581,10 @@ STDMETHODIMP CDeinterlace::get_DeinterlaceType(int *IPEffect)
 // put_DeinterlaceType
 // Set the required video effect
 /////////////////////////////////////////////////////////////////////////////
-STDMETHODIMP CDeinterlace::put_DeinterlaceType(int IPEffect)
+STDMETHODIMP CDeinterlace::put_DeinterlaceType(int iType)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
-    m_DeinterlaceType = IPEffect;
+    m_DeinterlaceType = iType;
     SetDirty(TRUE);
     return NOERROR;
 }

@@ -14,4 +14,9 @@
    * Support free compliers not just MSVC
 
    * Tie the filter to a deinterlace library (not created yet)
+   * Rewrite media type negotiation to use upstream filter's enumerator
+     Pass all media type changes from a downstream filter upstream and
+     perform deinterlacing only on known media types - otherwise
+     copy samples unmodified
+
 
