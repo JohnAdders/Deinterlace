@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.Cpp,v 1.8 2001-11-09 15:34:27 pgubanov Exp $
+// $Id: Deinterlace.Cpp,v 1.9 2001-11-10 10:35:01 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -19,6 +19,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2001/11/09 15:34:27  pgubanov
+// Try to work with DScaler plugins. Some code adopted from DIDMO, but less general anyway. For some reason, plugin crashes...
+//
 // Revision 1.7  2001/11/09 11:42:39  pgubanov
 // Output 2 frames for each inout frame. Doesn't care about input media type too much - just assume all input samples are frames. Never connect to anything except YUY2.
 //
@@ -404,15 +407,16 @@ CDeinterlace::getOutputSampleBuffer(IMediaSample *pSample, IMediaSample **ppOutp
 	// Copy IMediaSample2 properties
 	//
     ASSERT(pOutSample);
-    IMediaSample2 *pOutSample2;
-    if (SUCCEEDED(pOutSample->QueryInterface(IID_IMediaSample2,
-                                             (void **)&pOutSample2))) {
+    CComQIPtr<IMediaSample2,&IID_IMediaSample2> pOutSample2(pOutSample);
+    if (pOutSample2 != NULL) {
         //  Modify it
         AM_SAMPLE2_PROPERTIES OutProps;
         EXECUTE_ASSERT(SUCCEEDED(pOutSample2->GetProperties(
             FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, tStart), (PBYTE)&OutProps)
         ));
-        OutProps.dwTypeSpecificFlags = pProps->dwTypeSpecificFlags;
+
+        OutProps.dwTypeSpecificFlags = 0;	// Filter out interlace flags
+
         OutProps.dwSampleFlags =
             (OutProps.dwSampleFlags & AM_SAMPLE_TYPECHANGED) |
             (pProps->dwSampleFlags & ~AM_SAMPLE_TYPECHANGED);
@@ -426,7 +430,6 @@ CDeinterlace::getOutputSampleBuffer(IMediaSample *pSample, IMediaSample **ppOutp
         if (pProps->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY) {
             m_bSampleSkipped = FALSE;
         }
-        pOutSample2->Release();
     } else {
         if (pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID) {
             pOutSample->SetTime(&pProps->tStart,
@@ -485,16 +488,29 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 	int i;
 
 	//
-	// Release the sample we don't need any more
+	// Check stream continuity
 	//
-	if (m_pInputHistory[0])
-		m_pInputHistory[0] = NULL;
+	if (S_FALSE == pSource->IsDiscontinuity()) {
+		// Release the sample we don't need any more
+		if (m_pInputHistory[0])
+			m_pInputHistory[0] = NULL;
 
+		// Shift the history buffer and push the new sample
+		for (i=1;i<MAX_FRAMES_IN_HISTORY;i++)
+			m_pInputHistory[i-1] = m_pInputHistory[i];
+	}
+	else {
+
+		DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
+
+		// On discontinuity, invalidate history
+		for (i=0;i<MAX_FRAMES_IN_HISTORY;i++)
+			m_pInputHistory[i] = NULL;
+	}
+	
 	//
-	// Shift the history buffer and push the new sample
+	// Push the new sample into history buffer
 	//
-	for (i=1;i<MAX_FRAMES_IN_HISTORY;i++)
-		m_pInputHistory[i-1] = m_pInputHistory[i];
 	m_pInputHistory[MAX_FRAMES_IN_HISTORY-1] = pSource;
 	
 	//
@@ -582,6 +598,11 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 	// output frames
 	//
 
+	AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+	//
+	// AM_VIDEO_FLAG_REPEAT_FIELD is ignored for now
+	// AM_VIDEO_FLAG_FIELD1, AM_VIDEO_FLAG_FIELD2 are not supported
+	//
 
 	//
 	// Generate first field
@@ -613,7 +634,10 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 
 		info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
 		info.Overlay = pDestBuffer;
-		info.IsOdd = FALSE;
+
+		// stupid M$ notation means 'display top (even) field first'
+		info.IsOdd = (pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST) ? FALSE : TRUE;
+
 		callDeinterlaceMethod(&info,pPrevSourceBuffer != NULL);
 
 		// Time for first field
@@ -656,7 +680,10 @@ CDeinterlace::deinterlace(IMediaSample *pSource)
 
 		info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
 		info.Overlay = pDestBuffer;
-		info.IsOdd = TRUE;
+
+		// stupid M$ notation means 'display bottom (odd) field next'
+		info.IsOdd = (pProps->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST) ? TRUE : FALSE;
+
 		callDeinterlaceMethod(&info,pPrevSourceBuffer != NULL);
 
 		// Time for second field
@@ -681,32 +708,37 @@ CDeinterlace::callDeinterlaceMethod(MY_DEINTERLACE_INFO *pInfo,BOOL fHistoryVali
     switch (m_DeinterlaceType) {
 	case IDC_WEAVE:
 	default:
-		Weave(pInfo);
+		if (fHistoryValid)
+			DeinterlaceFieldWeave(pInfo);
+		else
+			Weave(pInfo);
 		break;
 	case IDC_BOB:
-		Bob(pInfo);
+		if (fHistoryValid)
+			DeinterlaceFieldBob(pInfo);
+		else
+			Bob(pInfo);
 		break;
 	case IDC_TYPE1:
-		// Let it be two frame
+		// Two frame crashes!
 //		if (fHistoryValid)
 //			DeinterlaceFieldTwoFrame(pInfo);
 		if (fHistoryValid && m_pDeinterlacePlugin)
 			m_pDeinterlacePlugin->process(pInfo);
 		else
-			Bob(pInfo);
+			Weave(pInfo);
 		break;
 	case IDC_TYPE2:
-		// Let it be blended clipping
 		if (fHistoryValid)
 			BlendedClipping(pInfo);
 		else
-			Bob(pInfo);
+			Weave(pInfo);
 		break;
 	case IDC_TYPE3:
 		if (fHistoryValid)
 			DeinterlaceFieldBob(pInfo);
 		else
-			Bob(pInfo);
+			Weave(pInfo);
         break;
     }
 
@@ -987,6 +1019,26 @@ HRESULT CDeinterlace::GetMediaType(int iPosition, CMediaType *pMediaType)
     // copy format from input pin
 	CMediaType cmt;
 	cmt = m_pInput->CurrentMediaType();
+
+	if (IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) {
+		VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *)cmt.Format();
+
+#pragma message("REMIND(Alter output media type correctly!)")
+		// we output 2 samples for each incoming sample
+		pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+		pvi->dwBitRate = pvi->dwBitRate*2;
+		pvi->dwInterlaceFlags = 0;	// progressive
+	}
+	else if (IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) {
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *)cmt.Format();
+
+#pragma message("REMIND(Alter output media type correctly!)")
+		// we output 2 samples for each incoming sample
+		pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+		pvi->dwBitRate = pvi->dwBitRate*2;
+	}
+
+
 	*pMediaType = cmt;
 
     return NOERROR;
@@ -1002,6 +1054,23 @@ BOOL CDeinterlace::CanPerformDeinterlace(const CMediaType *pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
 	{
+		if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VIDEOINFO2)) {
+			VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *)pMediaType->Format();
+
+//
+// Commented out for now - sometimes IsInterlaced is not set on interlaced material
+//
+//			if (!(pvi->dwInterlaceFlags & AMINTERLACE_IsInterlaced)) {
+//				DbgLog((LOG_TRACE,1,TEXT("No need to deinterlace")));
+//				return FALSE;
+//			}
+
+			if (pvi->dwInterlaceFlags & AMINTERLACE_1FieldPerSample) {
+				DbgLog((LOG_ERROR,1,TEXT("Field samples are not supported yet")));
+				return FALSE;
+			}
+		}
+
 		LPBITMAPINFOHEADER pbi;
 		if (IsEqualGUID(*pMediaType->FormatType(), FORMAT_VideoInfo)) {
 			pbi = &(((VIDEOINFOHEADER *)pMediaType->Format())->bmiHeader);

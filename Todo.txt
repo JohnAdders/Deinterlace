@@ -19,7 +19,9 @@
 
    * Update code to match project coding standards
 
-   * sort out problem with VIDEOINFO2 and VIDEOINFO inputs allowing both
+   * Implement handling of field samples
+
+   * Need algorithm options panel?
 
 If you want to help please see the developer page at
 http://www.dscaler.org/

@@ -1,3 +1,9 @@
+2001-11-10 Peter Gubanov
+	Poor framework to support DScaler plug-ins (namely, DI_GreedyH.dll),
+	support for VIDEOINFOHEADER2 and interlaced samples,
+	correct field output - generate 2 deinterlaced frames for each
+	incoming interlaced frame.
+
 2001-11-01 John Adcock
     Checked in version to ship with Hauppauge XP drivers
 

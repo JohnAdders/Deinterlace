@@ -24,6 +24,7 @@ DDeinterlaceGreedyH::DDeinterlaceGreedyH() :
 	m_fStreaming(FALSE)
 {
 	HMODULE hModule = ::LoadLibrary("DI_GreedyH.dll");
+//	HMODULE hModule = ::LoadLibrary("DI_Bob.dll");
 	if(hModule == NULL) {
 		return;
 	}
@@ -43,7 +44,7 @@ DDeinterlaceGreedyH::DDeinterlaceGreedyH() :
 		if(pMethod->SizeOfStructure!=sizeof(DEINTERLACE_METHOD) ||
 			pMethod->DeinterlaceStructureVersion!=DEINTERLACE_CURRENT_VERSION) {
 
-			FreeLibrary(hModule);
+			::FreeLibrary(hModule);
 			return;
 		}
 
@@ -51,7 +52,7 @@ DDeinterlaceGreedyH::DDeinterlaceGreedyH() :
 			pMethod->bNeedCombFactor==TRUE ||
 			pMethod->bIsHalfHeight==TRUE)
 		{
-			FreeLibrary(hModule);
+			::FreeLibrary(hModule);
 			return;
 		}
 		
@@ -63,7 +64,7 @@ DDeinterlaceGreedyH::DDeinterlaceGreedyH() :
 DDeinterlaceGreedyH::~DDeinterlaceGreedyH()
 {
 	if (m_hModule)
-		FreeLibrary(m_hModule);
+		::FreeLibrary(m_hModule);
 	m_hModule = NULL;
 	m_pMethod = NULL;
 }
@@ -121,7 +122,7 @@ DDeinterlaceGreedyH::process(MY_DEINTERLACE_INFO *pInfo) {
 	DIInfo.LineLength = pInfo->FrameWidth*2;		// Assume 16 bpp, YUY2
 	DIInfo.FrameWidth = pInfo->FrameWidth;
 	DIInfo.FrameHeight = pInfo->FrameHeight;
-	DIInfo.FieldHeight = 8; //pInfo->FieldHeight/2;
+	DIInfo.FieldHeight = pInfo->FieldHeight;
 
 	DIInfo.FieldDiff = 0;
 	DIInfo.CombFactor = 0;
@@ -142,7 +143,14 @@ DDeinterlaceGreedyH::process(MY_DEINTERLACE_INFO *pInfo) {
 	DIInfo.DestRect.right = 0;
 
 	if (m_pMethod && m_fStreaming) {
-		m_pMethod->pfnAlgorithm(&DIInfo);
+
+		try {
+			m_pMethod->pfnAlgorithm(&DIInfo);
+		}
+		except(EXCEPTION_EXECUTE_HANDLER) {
+			DbgLog((LOG_ERROR, 1, TEXT("Exception in deinterlacing module")));
+		}
+
 	}
 
 }

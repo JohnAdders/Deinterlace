@@ -58,9 +58,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Deinterlace Type",IDS_STATIC,6,78,208,38
     CONTROL         "Blended Clipping",IDC_TYPE2,"Button",BS_AUTORADIOBUTTON,
-                    61,100,69,12
-    CONTROL         "Two Frame",IDC_TYPE1,"Button",BS_AUTORADIOBUTTON,61,88,
-                    52,12
+                    61,100,83,12
+    CONTROL         "GreedyH (use plug-in)",IDC_TYPE1,"Button",
+                    BS_AUTORADIOBUTTON,61,88,84,12
     CONTROL         "Bob",IDC_BOB,"Button",BS_AUTORADIOBUTTON,13,100,41,12
     CONTROL         "Weave",IDC_WEAVE,"Button",BS_AUTORADIOBUTTON,13,88,44,
                     12
@@ -70,7 +70,7 @@ BEGIN
     LTEXT           "Deinterlace.ax comes with ABSOLUTELY NO WARRANTY.  This software in licenced under the terms of the GNU GPL for details see http://www.fsf.net/copyleft/gpl.html",
                     IDS_STATIC,1,32,220,25
     LTEXT           "The home page for this project is http://www.dscaler.org/",
-                    IDS_STATIC,0,63,220,17
+                    IDS_STATIC,0,63,220,11
 END
 
 
@@ -81,8 +81,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,0
- PRODUCTVERSION 1,1,0,0
+ FILEVERSION 1,2,0,0
+ PRODUCTVERSION 1,2,0,0
  FILEFLAGSMASK 0x30003fL
 #ifdef _DEBUG
  FILEFLAGS 0xbL
@@ -101,7 +101,7 @@ BEGIN
             VALUE "Comments", "Authors: John Adcock, Tom Barry, Steve Grimm, Peter Gubanov, Mark Rejhon, Michael Eskin\0"
             VALUE "CompanyName", "DScaler Project, see  http://www.dscaler.org/\0"
             VALUE "FileDescription", "Deinterlace Filter\0"
-            VALUE "FileVersion", "1.1.0\0"
+            VALUE "FileVersion", "1.2.0\0"
             VALUE "InternalName", "Deinterlace.ax\0"
             VALUE "LegalCopyright", "Copyright (C) 2000, 2001 DScaler Project\0"
             VALUE "LegalTrademarks", "This file is released under the terms of the GNU GPL\0"
@@ -109,7 +109,7 @@ BEGIN
             VALUE "OriginalFilename", "Deinterlace.ax\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "\0"
-            VALUE "ProductVersion", "1.1.0\0"
+            VALUE "ProductVersion", "1.2.0\0"
             VALUE "SpecialBuild", "\0"
         END
     END

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: memcpy.cpp,v 1.1 2001-11-09 15:31:43 pgubanov Exp $
+// $Id: memcpy.cpp,v 1.2 2001-11-10 10:35:01 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -24,6 +24,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2001/11/09 15:31:43  pgubanov
+// Adopted from DScaler source tree
+//
 // Revision 1.1  2001/08/08 15:37:02  tobbej
 // moved dmo filter to new directory
 //
@@ -44,7 +47,7 @@
 // assumes there will be at least 64 bytes to copy
 // This code was originally from Borg's bTV plugin SDK 
 /////////////////////////////////////////////////////////////////////////////
-void memcpyMMX(void *Dest, void *Src, size_t nBytes)
+void _cdecl memcpyMMX(void *Dest, void *Src, size_t nBytes)
 {
 	__asm {
 		mov		esi, dword ptr[Src]
@@ -94,7 +97,7 @@ EndCopyLoop:
 // bypass write caching to copy a bit faster.  The destination has to be
 // 16-byte aligned.  
 /////////////////////////////////////////////////////////////////////////////
-void memcpySSE(void *Dest, void *Src, size_t nBytes)
+void _cdecl memcpySSE(void *Dest, void *Src, size_t nBytes)
 {
 	__asm {
 		mov		esi, dword ptr[Src]
