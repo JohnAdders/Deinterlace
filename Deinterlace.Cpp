@@ -1,4 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
+// $Id: Deinterlace.Cpp,v 1.6 2001-11-01 11:04:19 adcockj Exp $
+/////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -14,7 +16,19 @@
 //	GNU General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// Deinterlace.cpp
+// CVS Log
+//
+// $Log: not supported by cvs2svn $
+/////////////////////////////////////////////////////////////////////////////
+// Change Log
+//
+// Date          Developer             Changes
+//
+// 28 Jun 2000   John Adcock           File created
+//
+// 20 Sep 2001   Michael Eskin         Changed to support use with video from bt878
+//                                     Driver 
+//
 /////////////////////////////////////////////////////////////////////////////
 
 #include <windows.h>
@@ -34,6 +48,7 @@
 #include "resource.h"
 
 #include "DI.h"
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Setup information
@@ -155,9 +170,11 @@ STDAPI DllUnregisterServer()
 /////////////////////////////////////////////////////////////////////////////
 // CDeinterlace Constructor
 /////////////////////////////////////////////////////////////////////////////
+
+//Tee changed IDC_WEAVE to IDC_TYPE1 Two Frame 
 CDeinterlace::CDeinterlace(TCHAR *tszName, LPUNKNOWN punk, HRESULT *phr) :
     CTransformFilter(tszName, punk, CLSID_Deinterlace),
-    m_DeinterlaceType(IDC_WEAVE),
+    m_DeinterlaceType(IDC_TYPE1),
     CPersistStream(punk, phr)
 {
 }
@@ -169,7 +186,14 @@ CDeinterlace::CDeinterlace(TCHAR *tszName, LPUNKNOWN punk, HRESULT *phr) :
 /////////////////////////////////////////////////////////////////////////////
 CUnknown *CDeinterlace::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
-    CDeinterlace *pNewObject = new CDeinterlace(NAME("Deinterlace Filer"), punk, phr);
+
+#ifdef	_DEBUG
+// uncomment to allow debug break point when filter is created
+//	#pragma message (REMIND("INT 3 on entry for DEBUG included"))
+//    __asm int 3
+#endif
+
+	CDeinterlace *pNewObject = new CDeinterlace(NAME("Deinterlace Filter"), punk, phr);
     if (pNewObject == NULL)
 	{
         *phr = E_OUTOFMEMORY;
@@ -422,13 +446,6 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 	CAutoLock l(&m_DeinterlaceLock);
 	int i;
 
-    // Copy the properties across
-//	HRESULT hr = CopyProperties(pSource, pDest);
-//	if (FAILED(hr))
-//	{
-//		return hr;
-//	}
-
 	if (m_pInputHistory[0])
 		m_pInputHistory[0]->Release();
 	for (i=1;i<MAX_FRAMES_IN_HISTORY;i++)
@@ -440,7 +457,6 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 	long lSourceSize = pSource->GetSize();
 	long lDestSize	= pDest->GetSize();
 
-	ASSERT(lDestSize >= lSourceSize);
 
 	pPrevSourceBuffer = NULL;
 	if (m_pInputHistory[MAX_FRAMES_IN_HISTORY-2])
@@ -451,10 +467,12 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 
     
 	AM_MEDIA_TYPE* pType = &m_pInput->CurrentMediaType();
-    VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *) pType->pbFormat;
+// MAE VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *) pType->pbFormat;
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pType->pbFormat;
 
 	AM_MEDIA_TYPE* pTypeOut = &m_pOutput->CurrentMediaType();
-    VIDEOINFOHEADER2 *pviOut = (VIDEOINFOHEADER2 *) pTypeOut->pbFormat;
+// MAE    VIDEOINFOHEADER2 *pviOut = (VIDEOINFOHEADER2 *) pTypeOut->pbFormat;
+    VIDEOINFOHEADER *pviOut = (VIDEOINFOHEADER *) pTypeOut->pbFormat;
 
     // Get the image properties from the BITMAPINFOHEADER
     int iPixelSize = pvi->bmiHeader.biBitCount / 8;
@@ -462,7 +480,7 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
     int cyImage    = pvi->bmiHeader.biHeight;
     int cbImage    = cyImage * cxImage * iPixelSize;
     int numPixels  = cxImage * cyImage;
-    int Line;
+//    int Line;			JBC 9/10/01
 
 	DEINTERLACE_INFO info;
 
@@ -492,6 +510,7 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
     switch (m_DeinterlaceType)
     {
 	case IDC_WEAVE:
+	default:
 		// doesn't do anything
 		// I assume that this is what was done by the capture filter
 		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
@@ -515,17 +534,6 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
         break;
     }
 
-	CComQIPtr<IMediaSample2,&IID_IMediaSample2> pMediaSample2(pSource);
-	if (!(!pMediaSample2)) {
-		AM_SAMPLE2_PROPERTIES Props;
-		if (SUCCEEDED(pMediaSample2->GetProperties(sizeof(Props), (PBYTE)&Props))) {
-			DbgLog((LOG_TRACE,2,TEXT("Frame Type: %s, %s, "),
-				(Props.dwSampleFlags & AM_VIDEO_FLAG_I_SAMPLE ? "I" : (Props.dwSampleFlags & AM_VIDEO_FLAG_P_SAMPLE ? "P" : (Props.dwSampleFlags & AM_VIDEO_FLAG_B_SAMPLE ? "B" : "?"))),
-				(Props.dwSampleFlags & AM_VIDEO_FLAG_INTERLEAVED_FRAME ? "interleaved" : (Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD1 ? "field 1" : (Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD2 ? "field 2" : "?"))),
-				(Props.dwSampleFlags & AM_VIDEO_FLAG_FIELD1FIRST ? "first field first" : ""),
-				(Props.dwSampleFlags & AM_VIDEO_FLAG_REPEAT_FIELD ? "repeat first field" : "") ));
-		}
-	}
     return NOERROR;
 }
 
@@ -619,8 +627,11 @@ HRESULT CDeinterlace::CopyProperties(IMediaSample *pSource, IMediaSample *pDest)
 /////////////////////////////////////////////////////////////////////////////
 HRESULT CDeinterlace::CheckInputType(const CMediaType *mtIn)
 {
-	// check this is a VIDEOINFOHEADER type
-	if (/*(*mtIn->FormatType() != FORMAT_VideoInfo) &&*/
+
+//return NOERROR;
+
+	// check this is a VIDEOINFOHEADER type // MAE Added VideoInfo back in
+	if ((*mtIn->FormatType() != FORMAT_VideoInfo) && 
 		(*mtIn->FormatType() != FORMAT_VIDEOINFO2))
 	{
 		return E_INVALIDARG;
@@ -726,8 +737,29 @@ HRESULT CDeinterlace::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIE
     ASSERT(pProperties);
     HRESULT hr = NOERROR;
 
+    // Get input pin's allocator size and use that
+    ALLOCATOR_PROPERTIES InProps;
+    IMemAllocator * pInAlloc = NULL;
+    hr = m_pInput->GetAllocator(&pInAlloc);
+    if (SUCCEEDED (hr))
+    {
+        hr = pInAlloc->GetProperties (&InProps);
+        if (SUCCEEDED (hr))
+        {
+            pProperties->cbBuffer = InProps.cbBuffer;
+        }
+        pInAlloc->Release();
+    }
+
+
     pProperties->cBuffers = 1;
+
+#if 0
     pProperties->cbBuffer = m_pInput->CurrentMediaType().GetSampleSize();
+    pProperties->cbBuffer = m_pOutput->CurrentMediaType().GetSampleSize(); 
+	pProperties->cbBuffer = 640*480*2;
+#endif
+
     ASSERT(pProperties->cbBuffer);
 
     // Ask the allocator to reserve us some sample memory, NOTE the function
@@ -759,8 +791,6 @@ HRESULT CDeinterlace::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIE
 /////////////////////////////////////////////////////////////////////////////
 HRESULT CDeinterlace::GetMediaType(int iPosition, CMediaType *pMediaType)
 {
-#pragma message (REMIND("Need to use upstream filter enumerator and act only on supported mediatypes"))
-
     // Is the input pin connected
     if (m_pInput->IsConnected() == FALSE)
 	{
@@ -944,8 +974,8 @@ STDMETHODIMP CDeinterlaceInputPin::GetAllocator(IMemAllocator ** ppAllocator)
 			Props.cBuffers = MAX_FRAMES_IN_HISTORY+1;
 		if (Props.cbAlign == 0)
 			Props.cbAlign = 1;
-		if (Props.cbBuffer < CurrentMediaType().GetSampleSize())
-			Props.cbBuffer = CurrentMediaType().GetSampleSize();
+		if (Props.cbBuffer < (long)CurrentMediaType().GetSampleSize())
+			Props.cbBuffer = (long)CurrentMediaType().GetSampleSize();
 
 		hr = (*ppAllocator)->SetProperties(&Props,&Actual);
 		if (SUCCEEDED(hr) && Actual.cBuffers < MAX_FRAMES_IN_HISTORY+1)
@@ -989,7 +1019,7 @@ CDeinterlaceInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
 	pProps->cbAlign = 0;
 	pProps->cbBuffer = 0;
 	pProps->cbPrefix = 0;
-	pProps->cBuffers = MAX_FRAMES_IN_HISTORY+1;
-
+	pProps->cBuffers = MAX_FRAMES_IN_HISTORY+4;  // JBC 9/20/01 we drop frames if to few buffers
+	
 	return NOERROR;
 } // GetAllocatorRequirements

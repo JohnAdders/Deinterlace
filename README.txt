@@ -15,13 +15,22 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+Introduction
+------------
+
+This filter provides a limited amout of the deinterlacing functionality of DScaler 
+to applications using the DirectShow framework.  For more details about DScaler see our
+homepage at http://www.dscaler.org/
+
 Instructions
 ------------
 
 To build the project you need the following
-MS Visual C++ 6.0
+MS Visual C++ 6.0 with the processor pack add on
+
 A copy of the platform SDK which includes the DirectShow SDK
- (I think that's April 2000 onwards)
+ (I think that's April 2000 onwards but not recent versions that excude using samples in GPL code)
+
 Add the platform sdk include and lib directories to the paths
   Check in Tools/Option.../Directories
   You need to add
@@ -33,7 +42,7 @@ Add the platform sdk include and lib directories to the paths
 The project should then Build OK
 
 See website for instruction on using filter
-http://deinterlace.sourceforge.net/
+http://www.dscaler.org/
 
 Files
 -----
