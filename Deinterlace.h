@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.h,v 1.3 2001-11-01 11:04:19 adcockj Exp $
+// $Id: Deinterlace.h,v 1.4 2001-11-09 11:42:38 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,10 @@
 
 #ifndef _DEINTERLACE_H
 #define _DEINTERLACE_H
+
+#include <atlbase.h>
+
+#include "DI.h"
 
 #define MAX_FRAMES_IN_HISTORY	2
 
@@ -46,7 +50,7 @@ public:
 	CBasePin *GetPin(int n);
 
     // Overrriden from CTransformFilter base class
-    HRESULT Transform(IMediaSample *pIn, IMediaSample *pOut);
+	HRESULT Receive(IMediaSample *pSample);
     HRESULT CheckInputType(const CMediaType *mtIn);
     HRESULT CheckTransform(const CMediaType *mtIn, const CMediaType *mtOut);
     HRESULT DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pProperties);
@@ -67,12 +71,19 @@ private:
     CDeinterlace(TCHAR *tszName, LPUNKNOWN punk, HRESULT *phr);
 
     BOOL CanPerformDeinterlace(const CMediaType *pMediaType) const;
+#if 0
     HRESULT CopyProperties(IMediaSample *pSource, IMediaSample *pDest) const;
+#endif
+
+	HRESULT getOutputSampleBuffer(IMediaSample *pSource,IMediaSample **ppOutput);
+    HRESULT deinterlace(IMediaSample *pIn);
+	void callDeinterlaceMethod(DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) const;
+
 
     CCritSec	m_DeinterlaceLock;  // Private play critical section
     int         m_DeinterlaceType;  // Which type of deinterlacing shall we do
 
-	IMediaSample *m_pInputHistory[MAX_FRAMES_IN_HISTORY];
+	CComPtr<IMediaSample> m_pInputHistory[MAX_FRAMES_IN_HISTORY];
 };
 
 // ==================================================

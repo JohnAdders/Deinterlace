@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: Deinterlace.Cpp,v 1.6 2001-11-01 11:04:19 adcockj Exp $
+// $Id: Deinterlace.Cpp,v 1.7 2001-11-09 11:42:39 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -19,6 +19,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2001/11/01 11:04:19  adcockj
+// Updated headers
+// Checked in changes by Micheal Eskin and Hauppauge
+//
 /////////////////////////////////////////////////////////////////////////////
 // Change Log
 //
@@ -49,6 +53,8 @@
 
 #include "DI.h"
 
+
+#define MAX_INPUT_LINES_PER_FIELD	2048
 
 /////////////////////////////////////////////////////////////////////////////
 // Setup information
@@ -272,10 +278,7 @@ HRESULT CDeinterlace::StartStreaming()
 /////////////////////////////////////////////////////////////////////////////
 HRESULT CDeinterlace::StopStreaming()
 {
-	for (int i=0;i<MAX_FRAMES_IN_HISTORY;i++)
-	{
-		if (m_pInputHistory[i])
-			m_pInputHistory[i]->Release();
+	for (int i=0;i<MAX_FRAMES_IN_HISTORY;i++) {
 		m_pInputHistory[i] = NULL;
 	}
 
@@ -441,60 +444,204 @@ EndCopyLoop:
 	}
 }
 
-HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
+// Set up our output sample
+HRESULT
+CDeinterlace::getOutputSampleBuffer(IMediaSample *pSample, IMediaSample **ppOutput)
+{
+    IMediaSample *pOutSample;
+
+	// default - times are the same
+	AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+	DWORD dwFlags = m_bSampleSkipped ? AM_GBF_PREVFRAMESKIPPED : 0;
+
+	// This will prevent the image renderer from switching us to DirectDraw
+	// when we can't do it without skipping frames because we're not on a
+	// keyframe.  If it really has to switch us, it still will, but then we
+	// will have to wait for the next keyframe
+	if (!(pProps->dwSampleFlags & AM_SAMPLE_SPLICEPOINT)) {
+		dwFlags |= AM_GBF_NOTASYNCPOINT;
+	}
+
+	HRESULT hr = m_pOutput->GetDeliveryBuffer(&pOutSample,
+		pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID ? &pProps->tStart : NULL,
+		pProps->dwSampleFlags & AM_SAMPLE_STOPVALID ? &pProps->tStop : NULL,
+		dwFlags);
+
+    *ppOutput = pOutSample;
+    if (FAILED(hr)) {
+		*ppOutput = NULL;
+        return hr;
+    }
+
+	//
+	// Check if output media type has been changed.
+	// Downstream filter may ask us to output data to
+	// a larger bitmap - so usually does Overlay Mixer,
+	// or to a different format - so does Video Renderer.
+	// Since we accept only YUY2, we primarily take care of
+	// the former.
+	//
+	AM_MEDIA_TYPE *pmt;
+	pOutSample->GetMediaType(&pmt);
+	if (pmt != NULL) {
+		CMediaType cmt(*pmt);
+		DeleteMediaType(pmt);
+		m_pOutput->SetMediaType(&cmt);
+	}
+
+	//
+	// Copy IMediaSample2 properties
+	//
+    ASSERT(pOutSample);
+    IMediaSample2 *pOutSample2;
+    if (SUCCEEDED(pOutSample->QueryInterface(IID_IMediaSample2,
+                                             (void **)&pOutSample2))) {
+        //  Modify it
+        AM_SAMPLE2_PROPERTIES OutProps;
+        EXECUTE_ASSERT(SUCCEEDED(pOutSample2->GetProperties(
+            FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, tStart), (PBYTE)&OutProps)
+        ));
+        OutProps.dwTypeSpecificFlags = pProps->dwTypeSpecificFlags;
+        OutProps.dwSampleFlags =
+            (OutProps.dwSampleFlags & AM_SAMPLE_TYPECHANGED) |
+            (pProps->dwSampleFlags & ~AM_SAMPLE_TYPECHANGED);
+        OutProps.tStart = pProps->tStart;
+        OutProps.tStop  = pProps->tStop;
+        OutProps.cbData = FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, dwStreamId);
+        hr = pOutSample2->SetProperties(
+            FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, dwStreamId),
+            (PBYTE)&OutProps
+        );
+        if (pProps->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY) {
+            m_bSampleSkipped = FALSE;
+        }
+        pOutSample2->Release();
+    } else {
+        if (pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID) {
+            pOutSample->SetTime(&pProps->tStart,
+                                &pProps->tStop);
+        }
+        if (pProps->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) {
+            pOutSample->SetSyncPoint(TRUE);
+        }
+        if (pProps->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY) {
+            pOutSample->SetDiscontinuity(TRUE);
+            m_bSampleSkipped = FALSE;
+        }
+
+        // Copy the media times
+		// Will be updated later if needed
+        LONGLONG MediaStart, MediaEnd;
+        if (pSample->GetMediaTime(&MediaStart,&MediaEnd) == NOERROR) {
+            pOutSample->SetMediaTime(&MediaStart,&MediaEnd);
+        }
+    }
+    return S_OK;
+}
+
+//
+// Process input samples
+//
+HRESULT
+CDeinterlace::Receive(IMediaSample *pSample)
+{
+    //
+	// Check for other streams and pass them on
+	//
+    AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+    if (pProps->dwStreamId != AM_STREAM_MEDIA) {
+        return m_pOutput->Deliver(pSample);
+    }
+    HRESULT hr;
+    ASSERT(pSample);
+
+    // If no output to deliver to then no point sending us data
+    ASSERT (m_pOutput != NULL) ;
+
+    // Process input sample and deliver output sample(s)
+    hr = deinterlace(pSample);
+
+    return hr;
+}
+
+//
+// Deinterlace input frames/fields and generate output samples
+//
+HRESULT
+CDeinterlace::deinterlace(IMediaSample *pSource)
 {
 	CAutoLock l(&m_DeinterlaceLock);
 	int i;
 
+	//
+	// Release the sample we don't need any more
+	//
 	if (m_pInputHistory[0])
-		m_pInputHistory[0]->Release();
+		m_pInputHistory[0] = NULL;
+
+	//
+	// Shift the history buffer and push the new sample
+	//
 	for (i=1;i<MAX_FRAMES_IN_HISTORY;i++)
 		m_pInputHistory[i-1] = m_pInputHistory[i];
 	m_pInputHistory[MAX_FRAMES_IN_HISTORY-1] = pSource;
-	pSource->AddRef();
 	
-	BYTE *pPrevSourceBuffer, *pSourceBuffer, *pDestBuffer;
+	//
+	// Output buffer pointers and sizes
+	//
+	BYTE *pPrevSourceBuffer, *pSourceBuffer;
 	long lSourceSize = pSource->GetSize();
-	long lDestSize	= pDest->GetSize();
-
 
 	pPrevSourceBuffer = NULL;
 	if (m_pInputHistory[MAX_FRAMES_IN_HISTORY-2])
 		m_pInputHistory[MAX_FRAMES_IN_HISTORY-2]->GetPointer(&pPrevSourceBuffer);
 
 	pSource->GetPointer(&pSourceBuffer);
-	pDest->GetPointer(&pDestBuffer);
 
-    
-	AM_MEDIA_TYPE* pType = &m_pInput->CurrentMediaType();
-// MAE VIDEOINFOHEADER2 *pvi = (VIDEOINFOHEADER2 *) pType->pbFormat;
-	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pType->pbFormat;
+	//
+	// Get input BITMAPINFOHEADER and rectangle
+	// 
+	LPBITMAPINFOHEADER pbiIn;
+	LPRECT prcIn;
+	if (IsEqualGUID(*m_pInput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) {
+		pbiIn = &(((VIDEOINFOHEADER *)m_pInput->CurrentMediaType().Format())->bmiHeader);
+		prcIn = &(((VIDEOINFOHEADER *)m_pInput->CurrentMediaType().Format())->rcSource);
+	}
+	else if (IsEqualGUID(*m_pInput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) {
+		pbiIn = &(((VIDEOINFOHEADER2 *)m_pInput->CurrentMediaType().Format())->bmiHeader);
+		prcIn = &(((VIDEOINFOHEADER *)m_pInput->CurrentMediaType().Format())->rcSource);
+	}
 
-	AM_MEDIA_TYPE* pTypeOut = &m_pOutput->CurrentMediaType();
-// MAE    VIDEOINFOHEADER2 *pviOut = (VIDEOINFOHEADER2 *) pTypeOut->pbFormat;
-    VIDEOINFOHEADER *pviOut = (VIDEOINFOHEADER *) pTypeOut->pbFormat;
-
+	//
     // Get the image properties from the BITMAPINFOHEADER
-    int iPixelSize = pvi->bmiHeader.biBitCount / 8;
-    int cxImage    = pvi->bmiHeader.biWidth;
-    int cyImage    = pvi->bmiHeader.biHeight;
+	//
+    int iPixelSize = pbiIn->biBitCount / 8;
+    int cxImage    = pbiIn->biWidth;
+    int cyImage    = pbiIn->biHeight;
     int cbImage    = cyImage * cxImage * iPixelSize;
     int numPixels  = cxImage * cyImage;
-//    int Line;			JBC 9/10/01
 
+	//
+	// Initialize a deinterlacer method
+	//
 	DEINTERLACE_INFO info;
 
-	short *OddLines[2][2048];
-	short *EvenLines[2][2048];
+	short *OddLines[2][MAX_INPUT_LINES_PER_FIELD];
+	short *EvenLines[2][MAX_INPUT_LINES_PER_FIELD];
 
-	info.OverlayPitch = pviOut->bmiHeader.biWidth*pviOut->bmiHeader.biBitCount/8;
-	info.LineLength = pvi->bmiHeader.biWidth*pvi->bmiHeader.biBitCount/8;
-	info.FrameWidth = pvi->bmiHeader.biWidth;
-	info.FrameHeight = pvi->bmiHeader.biHeight;
-	info.FieldHeight = pvi->bmiHeader.biHeight / 2;
+	//
+	// Generate output buffer pointers
+	//
+	info.LineLength = pbiIn->biWidth*pbiIn->biBitCount/8;
+	info.FrameWidth = pbiIn->biWidth;
+	info.FrameHeight = pbiIn->biHeight;
+#pragma message("REMIND(Assume frame pictures on input)")
+	info.FieldHeight = pbiIn->biHeight / 2;
+	if (info.FieldHeight > MAX_INPUT_LINES_PER_FIELD) {
+		info.FieldHeight = MAX_INPUT_LINES_PER_FIELD;
+	}
 
-	for (i=0;i<info.FieldHeight;i++)
-	{
+	for (i=0;i<info.FieldHeight;i++) {
 		EvenLines[0][i] = (short*)(pSourceBuffer+(2*i)*info.LineLength);
 		OddLines[0][i] = (short*)(pSourceBuffer+(2*i+1)*info.LineLength);
 		EvenLines[1][i] = (short*)(pPrevSourceBuffer+(2*i)*info.LineLength);
@@ -504,44 +651,148 @@ HRESULT CDeinterlace::Transform(IMediaSample *pSource, IMediaSample *pDest)
 	info.EvenLines[0] = EvenLines[0];
 	info.OddLines[1] = OddLines[1];
 	info.EvenLines[1] = EvenLines[1];
-	info.Overlay = pDestBuffer;
-	info.IsOdd = FALSE;
 
-    switch (m_DeinterlaceType)
-    {
-	case IDC_WEAVE:
-	default:
-		// doesn't do anything
-		// I assume that this is what was done by the capture filter
-		CopyMemory((PVOID) pDestBuffer, (PVOID) pSourceBuffer, lSourceSize);
-		break;
-	case IDC_BOB:
-		Bob(&info);
-		break;
-	case IDC_TYPE1:
-		// Let it be two frame
-		if (pPrevSourceBuffer)
-			DeinterlaceFieldTwoFrame(&info);
-		break;
-	case IDC_TYPE2:
-		// Let it be blended clipping
-		if (pPrevSourceBuffer)
-			BlendedClipping(&info);
-		break;
-	case IDC_TYPE3:
-		if (pPrevSourceBuffer)
-			DeinterlaceFieldBob(&info);
-        break;
-    }
+	//
+	// Call deinterlace method and deliver samples
+	//
+	// Assume frame input and call deinterlace method
+	// twice for each sample thus producing two
+	// output frames
+	//
+
+
+	//
+	// Generate first field
+	//
+	do {
+		CComPtr<IMediaSample> pDest;
+
+		HRESULT hr = getOutputSampleBuffer(pSource,&pDest);
+		if (FAILED(hr))
+			return NOERROR;
+
+		long lDestSize = pDest->GetSize();
+		BYTE *pDestBuffer;
+		pDest->GetPointer(&pDestBuffer);
+
+		//
+		// Get output BITMAPINFOHEADER and rectangle
+		//
+		LPBITMAPINFOHEADER pbiOut;
+		LPRECT prcOut;
+		if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) {
+			pbiOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->bmiHeader);
+			prcOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->rcTarget);
+		}
+		else if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) {
+			pbiOut = &(((VIDEOINFOHEADER2 *)m_pOutput->CurrentMediaType().Format())->bmiHeader);
+			prcOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->rcTarget);
+		}
+
+		info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
+		info.Overlay = pDestBuffer;
+		info.IsOdd = FALSE;
+		callDeinterlaceMethod(&info,pPrevSourceBuffer != NULL);
+
+		// Time for first field
+		REFERENCE_TIME rtStart, rtStop;
+		if (S_OK == pSource->GetTime(&rtStart,&rtStop)) {
+			rtStop = rtStart + (rtStop - rtStart)/2;
+			pDest->SetTime(&rtStart,&rtStop);
+		}
+
+		m_pOutput->Deliver(pDest);
+	} while(0);
+
+	//
+	// Generate second field
+	//
+	do {
+		CComPtr<IMediaSample> pDest;
+
+		HRESULT hr = getOutputSampleBuffer(pSource,&pDest);
+		if (FAILED(hr))
+			return NOERROR;
+
+		long lDestSize = pDest->GetSize();
+		BYTE *pDestBuffer;
+		pDest->GetPointer(&pDestBuffer);
+
+		//
+		// Get output BITMAPINFOHEADER and rectangle
+		//
+		LPBITMAPINFOHEADER pbiOut;
+		LPRECT prcOut;
+		if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VideoInfo)) {
+			pbiOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->bmiHeader);
+			prcOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->rcTarget);
+		}
+		else if (IsEqualGUID(*m_pOutput->CurrentMediaType().FormatType(), FORMAT_VIDEOINFO2)) {
+			pbiOut = &(((VIDEOINFOHEADER2 *)m_pOutput->CurrentMediaType().Format())->bmiHeader);
+			prcOut = &(((VIDEOINFOHEADER *)m_pOutput->CurrentMediaType().Format())->rcTarget);
+		}
+
+		info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
+		info.Overlay = pDestBuffer;
+		info.IsOdd = TRUE;
+		callDeinterlaceMethod(&info,pPrevSourceBuffer != NULL);
+
+		// Time for second field
+		REFERENCE_TIME rtStart, rtStop;
+		if (S_OK == pSource->GetTime(&rtStart,&rtStop)) {
+			rtStart = rtStart + (rtStop - rtStart + 1)/2;
+			pDest->SetTime(&rtStart,&rtStop);
+		}
+
+		m_pOutput->Deliver(pDest);
+	} while(0);
 
     return NOERROR;
 }
 
+//
+// Call apropriate deinterlace method
+//
+void
+CDeinterlace::callDeinterlaceMethod(DEINTERLACE_INFO *pInfo,BOOL fHistoryValid) const
+{
+    switch (m_DeinterlaceType) {
+	case IDC_WEAVE:
+	default:
+		Weave(pInfo);
+		break;
+	case IDC_BOB:
+		Bob(pInfo);
+		break;
+	case IDC_TYPE1:
+		// Let it be two frame
+		if (fHistoryValid)
+			DeinterlaceFieldTwoFrame(pInfo);
+		else
+			Bob(pInfo);
+		break;
+	case IDC_TYPE2:
+		// Let it be blended clipping
+		if (fHistoryValid)
+			BlendedClipping(pInfo);
+		else
+			Bob(pInfo);
+		break;
+	case IDC_TYPE3:
+		if (fHistoryValid)
+			DeinterlaceFieldBob(pInfo);
+		else
+			Bob(pInfo);
+        break;
+    }
+
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Copy
 // Make destination properties the same as source
 /////////////////////////////////////////////////////////////////////////////
+#if 0
 HRESULT CDeinterlace::CopyProperties(IMediaSample *pSource, IMediaSample *pDest) const
 {
     // Copy the sample times
@@ -620,6 +871,7 @@ HRESULT CDeinterlace::CopyProperties(IMediaSample *pSource, IMediaSample *pDest)
     return NOERROR;
 
 }
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CheckInputType
@@ -739,7 +991,7 @@ HRESULT CDeinterlace::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIE
 
     // Get input pin's allocator size and use that
     ALLOCATOR_PROPERTIES InProps;
-    IMemAllocator * pInAlloc = NULL;
+    CComPtr<IMemAllocator> pInAlloc;
     hr = m_pInput->GetAllocator(&pInAlloc);
     if (SUCCEEDED (hr))
     {
@@ -748,7 +1000,6 @@ HRESULT CDeinterlace::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIE
         {
             pProperties->cbBuffer = InProps.cbBuffer;
         }
-        pInAlloc->Release();
     }
 
 
@@ -835,10 +1086,15 @@ BOOL CDeinterlace::CanPerformDeinterlace(const CMediaType *pMediaType) const
 			pbi = &(((VIDEOINFOHEADER2 *)pMediaType->Format())->bmiHeader);
 		}
 
-        if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB24)) {
-            return (pbi->biBitCount == 24);
-        }
-		else if(IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_YUY2)) {
+//
+// Some deinterlace routines assume the input is YUY2
+// and produce incorrect results on RGB input
+//
+//        if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB24)) {
+//            return (pbi->biBitCount == 24);
+//        }
+//		else 
+		if(IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_YUY2)) {
 			return (pbi->biBitCount == 16);
 		}
     }
