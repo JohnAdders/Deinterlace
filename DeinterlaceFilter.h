@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.h,v 1.7 2001-12-15 16:08:54 adcockj Exp $
+// $Id: DeinterlaceFilter.h,v 1.8 2002-01-14 12:56:04 pgubanov Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ private:
     BOOL CanPerformDeinterlace(const CMediaType* pMediaType) const;
 	HRESULT GetOutputSampleBuffer(IMediaSample* pSource,IMediaSample** ppOutput);
     HRESULT Deinterlace(IMediaSample* pIn);
-	void CallDeinterlaceMethod(TDeinterlaceInfo* pInfo) const;
+	void CallDeinterlaceMethod(TDeinterlaceInfo* pInfo, int DeinterlaceType);
 
 	void FixOverlayPitch();
 

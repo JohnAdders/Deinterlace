@@ -1,3 +1,8 @@
+2002-01-14 Peter Gubanov
+	Happy New Year!
+	Fixed locking policy for Deinterlace() method to prevent
+	deadlock when brinning up property page in paused state
+
 2001-11-14 John Adcock
     Made to support any input file
     Changed COM stuff to use IDL
