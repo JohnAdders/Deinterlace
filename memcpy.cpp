@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: memcpy.cpp,v 1.4 2001-11-14 08:03:42 adcockj Exp $
+// $Id: memcpy.cpp,v 1.5 2001-12-18 15:56:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2001/11/14 08:03:42  adcockj
+// Fixed alignment problems
+//
 // Revision 1.3  2001/11/13 13:51:43  adcockj
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
@@ -123,7 +126,7 @@ void __cdecl memcpySSE(void *Dest, void *Src, size_t nBytes)
 align 8
 CopyLoopSSE:
         // movaps should be slightly more efficient
-        // as the data is 16 bit aligned
+        // as the data is 16 byte aligned
         movaps  xmm0, xmmword ptr[esi]
         movaps  xmm1, xmmword ptr[esi+16*1]
         movaps  xmm2, xmmword ptr[esi+16*2]

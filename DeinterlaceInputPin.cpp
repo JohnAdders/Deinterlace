@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceInputPin.cpp,v 1.3 2001-12-13 16:53:28 adcockj Exp $
+// $Id: DeinterlaceInputPin.cpp,v 1.4 2001-12-18 15:56:28 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2001/12/13 16:53:28  adcockj
+// Improvements to processing with sources with allocators
+// that won't give us lots of history.  We should fail back properly
+//
 // Revision 1.2  2001/12/11 17:31:58  adcockj
 // Added new GUIDs to avoid clash with hauppauge version
 // Fixed breaking of COM interface rules by adding IDeinterlace2
@@ -160,7 +164,7 @@ STDMETHODIMP CDeinterlaceInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES
 {
     DbgLog((LOG_TRACE, 2, TEXT("CDeinterlaceInputPin::GetAllocatorRequirements")));
 
-    pProps->cbAlign = 8;
+    pProps->cbAlign = 16;
     pProps->cbBuffer = 0;
     pProps->cbPrefix = 0;
     // JBC 9/20/01 we drop frames if too few buffers
