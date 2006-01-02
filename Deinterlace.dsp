@@ -159,8 +159,6 @@ DEP_CPP_DEINT=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
-	".\Deinterlace.h"\
-	".\Deinterlace_i.c"\
 	".\DeinterlaceAbout.h"\
 	".\DeinterlaceFilter.h"\
 	".\DeinterlaceProperties.h"\
@@ -176,7 +174,6 @@ DEP_CPP_DEINT=\
 	{$(INCLUDE)}"dllsetup.h"\
 	{$(INCLUDE)}"dsschedule.h"\
 	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"guiddef.h"\
 	{$(INCLUDE)}"measure.h"\
 	{$(INCLUDE)}"msgthrd.h"\
 	{$(INCLUDE)}"mtype.h"\
@@ -198,6 +195,10 @@ DEP_CPP_DEINT=\
 	{$(INCLUDE)}"wxdebug.h"\
 	{$(INCLUDE)}"wxlist.h"\
 	{$(INCLUDE)}"wxutil.h"\
+	
+NODEP_CPP_DEINT=\
+	".\Deinterlace.h"\
+	".\Deinterlace_i.c"\
 	
 # End Source File
 # Begin Source File
@@ -225,7 +226,6 @@ SOURCE=.\Deinterlace.idl
 
 SOURCE=.\DeinterlaceAbout.Cpp
 DEP_CPP_DEINTE=\
-	".\Deinterlace.h"\
 	".\DeinterlaceAbout.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
@@ -260,6 +260,9 @@ DEP_CPP_DEINTE=\
 	{$(INCLUDE)}"wxlist.h"\
 	{$(INCLUDE)}"wxutil.h"\
 	
+NODEP_CPP_DEINTE=\
+	".\Deinterlace.h"\
+	
 # End Source File
 # Begin Source File
 
@@ -269,7 +272,6 @@ DEP_CPP_DEINTER=\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
 	".\cpu.h"\
-	".\Deinterlace.h"\
 	".\DeinterlaceFilter.h"\
 	".\DeinterlaceInputPin.h"\
 	".\DI.h"\
@@ -308,6 +310,9 @@ DEP_CPP_DEINTER=\
 	{$(INCLUDE)}"wxlist.h"\
 	{$(INCLUDE)}"wxutil.h"\
 	
+NODEP_CPP_DEINTER=\
+	".\Deinterlace.h"\
+	
 # End Source File
 # Begin Source File
 
@@ -316,7 +321,6 @@ DEP_CPP_DEINTERL=\
 	"..\DScaler\Api\DS_ApiCommon.h"\
 	"..\DScaler\Api\DS_Control.h"\
 	"..\DScaler\Api\DS_Deinterlace.h"\
-	".\Deinterlace.h"\
 	".\DeinterlaceFilter.h"\
 	".\DeinterlaceInputPin.h"\
 	".\DI.h"\
@@ -353,12 +357,14 @@ DEP_CPP_DEINTERL=\
 	{$(INCLUDE)}"wxlist.h"\
 	{$(INCLUDE)}"wxutil.h"\
 	
+NODEP_CPP_DEINTERL=\
+	".\Deinterlace.h"\
+	
 # End Source File
 # Begin Source File
 
 SOURCE=.\DeinterlaceProperties.Cpp
 DEP_CPP_DEINTERLA=\
-	".\Deinterlace.h"\
 	".\DeinterlaceProperties.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"amextra.h"\
@@ -392,6 +398,9 @@ DEP_CPP_DEINTERLA=\
 	{$(INCLUDE)}"wxdebug.h"\
 	{$(INCLUDE)}"wxlist.h"\
 	{$(INCLUDE)}"wxutil.h"\
+	
+NODEP_CPP_DEINTERLA=\
+	".\Deinterlace.h"\
 	
 # End Source File
 # Begin Source File

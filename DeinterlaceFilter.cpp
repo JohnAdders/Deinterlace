@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.14 2002-03-14 07:44:01 pgubanov Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.15 2006-01-02 14:11:02 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2002/03/14 07:44:01  pgubanov
+// Allow dynamic plugin changes, don't crash if no plugin specified.
+//
 // Revision 1.13  2002/03/09 10:48:52  pgubanov
 // Copy history correctly. Fix access violation in StopStreaming() - caused by exceeding array bounds of m_pInputHistory[]
 //
@@ -979,26 +982,31 @@ HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType* pMediaType)
     CMediaType cmt;
     cmt = m_pInput->CurrentMediaType();
 
+	
 	//
 	// Caution! m_RateDouble may be changed by put_RefreshRateDouble
 	//
-    if(m_RateDouble)
+    if(IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) 
     {
-        if(IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) 
-        {
-            VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)cmt.Format();
-            // we output 2 samples for each incoming sample
-            pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
-            pvi->dwBitRate = pvi->dwBitRate*2;
-            pvi->dwInterlaceFlags = 0;  // progressive
-        }
-        else if(IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) 
-        {
-            VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)cmt.Format();
-            // we output 2 samples for each incoming sample
-            pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
-            pvi->dwBitRate = pvi->dwBitRate*2;
-        }
+        VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)cmt.Format();
+		if(m_RateDouble)
+		{
+			// we output 2 samples for each incoming sample
+			pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+			pvi->dwBitRate = pvi->dwBitRate*2;
+		}
+		// output always interlaced
+	    pvi->dwInterlaceFlags = 0;
+    }
+    else if(IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) 
+    {
+        VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)cmt.Format();
+		if(m_RateDouble)
+		{
+			// we output 2 samples for each incoming sample
+			pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+			pvi->dwBitRate = pvi->dwBitRate*2;
+		}
     }
 
     *pMediaType = cmt;
