@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: DeinterlaceFilter.cpp,v 1.15 2006-01-02 14:11:02 adcockj Exp $
+// $Id: DeinterlaceFilter.cpp,v 1.16 2006-10-06 13:59:40 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2001 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2006/01/02 14:11:02  adcockj
+// made output always progressive
+//
 // Revision 1.14  2002/03/14 07:44:01  pgubanov
 // Allow dynamic plugin changes, don't crash if no plugin specified.
 //
@@ -250,7 +253,8 @@ HRESULT CDeinterlaceFilter::InactivateDeinterlacePlugin()
 /////////////////////////////////////////////////////////////////////////////
 HRESULT CDeinterlaceFilter::StartStreaming()
 {
-    for (int i = 0;i < MAX_FRAMES_IN_HISTORY;i++)
+    int i;
+    for (i = 0; i < MAX_FRAMES_IN_HISTORY;i++)
     {
         m_pInputHistory[i] = NULL;
     }

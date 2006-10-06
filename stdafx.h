@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// $Id: stdafx.h,v 1.2 2001-11-14 16:42:18 adcockj Exp $
+// $Id: stdafx.h,v 1.3 2006-10-06 13:59:40 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2000 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,12 +18,17 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2001/11/14 16:42:18  adcockj
+// Added support for any plugin
+//
 // Revision 1.1  2001/11/13 13:51:43  adcockj
 // Tidy up code and made to mostly conform to coding standards
 // Changed history behaviour
 // Made to use DEINTERLACE_INFO throughout
 //
 /////////////////////////////////////////////////////////////////////////////
+
+#define _CRT_SECURE_NO_DEPRECATE
 
 #include <windows.h>
 #include <windowsx.h>
