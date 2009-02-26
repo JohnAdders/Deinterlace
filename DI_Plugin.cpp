@@ -26,18 +26,6 @@
 //  do so, delete this exception statement from your version.
 //
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2001/11/14 16:42:18  adcockj
-// Added support for any plugin
-//
-// Revision 1.3  2001/11/13 13:51:43  adcockj
-// Tidy up code and made to mostly conform to coding standards
-// Changed history behaviour
-// Made to use DEINTERLACE_INFO throughout
-//
-///////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"

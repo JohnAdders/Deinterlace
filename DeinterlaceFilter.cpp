@@ -26,61 +26,6 @@
 //  do so, delete this exception statement from your version.
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.15  2006/01/02 14:11:02  adcockj
-// made output always progressive
-//
-// Revision 1.14  2002/03/14 07:44:01  pgubanov
-// Allow dynamic plugin changes, don't crash if no plugin specified.
-//
-// Revision 1.13  2002/03/09 10:48:52  pgubanov
-// Copy history correctly. Fix access violation in StopStreaming() - caused by exceeding array bounds of m_pInputHistory[]
-//
-// Revision 1.12  2002/01/14 12:56:04  pgubanov
-// Fixed locking policy for Deinterlace() method to prevent deadlock when brinning up property page in paused state
-//
-// Revision 1.11  2001/12/15 16:08:54  adcockj
-// Changes for ShowShifter compability
-//
-// Revision 1.10  2001/12/13 16:53:28  adcockj
-// Improvements to processing with sources with allocators
-// that won't give us lots of history.  We should fail back properly
-//
-// Revision 1.9  2001/12/11 20:11:53  adcockj
-// Bug fixes
-//
-// Revision 1.8  2001/12/11 17:31:58  adcockj
-// Added new GUIDs to avoid clash with hauppauge version
-// Fixed breaking of COM interface rules by adding IDeinterlace2
-// Added new setting to control Refresh rate doubling
-// Test of code to allow deinterlacing even if we get very little history
-//
-// Revision 1.7  2001/11/28 09:45:56  pgubanov
-// Fix: we have to update overlay pitch every time we are notified of output format change. John, setting up m_Info in StartStreaming() is not enough - take care of dynamic changes!
-//
-// Revision 1.6  2001/11/14 17:06:21  adcockj
-// Added About Page
-//
-// Revision 1.5  2001/11/14 16:42:18  adcockj
-// Added support for any plugin
-//
-// Revision 1.4  2001/11/14 13:42:22  adcockj
-// Fixed compile errors
-//
-// Revision 1.3  2001/11/14 13:32:05  adcockj
-// Moved COM definitions into IDL
-//
-// Revision 1.2  2001/11/14 08:03:42  adcockj
-// Fixed alignment problems
-//
-// Revision 1.1  2001/11/13 13:51:43  adcockj
-// Tidy up code and made to mostly conform to coding standards
-// Changed history behaviour
-// Made to use DEINTERLACE_INFO throughout
-//
-/////////////////////////////////////////////////////////////////////////////
 // Log from old Deinterlace.cpp
 //
 // Revision 1.9  2001/11/10 10:35:01  pgubanov
@@ -213,7 +158,7 @@ CBasePin* CDeinterlaceFilter::GetPin(int n)
 //
 HRESULT CDeinterlaceFilter::ActivateDeinterlacePlugin()
 {
-	if (m_PlugInName != NULL)
+    if (m_PlugInName != NULL)
     {
         // convert BSTR to a char string so that we
         // can use it to load plugin on all
@@ -230,7 +175,7 @@ HRESULT CDeinterlaceFilter::ActivateDeinterlacePlugin()
         }
     }
 
-	return S_OK;
+    return S_OK;
 }
 
 //
@@ -245,7 +190,7 @@ HRESULT CDeinterlaceFilter::InactivateDeinterlacePlugin()
         m_pDeinterlacePlugin = NULL;
     }
 
-	return S_OK;
+    return S_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -261,7 +206,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
 
     if(m_DeinterlaceType == IDC_TYPE4)
     {
-		ActivateDeinterlacePlugin();
+        ActivateDeinterlacePlugin();
     }
 
     /////////////////////////////////////////////////////////
@@ -273,7 +218,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
 
     for (i = 0; i < 4; ++i) 
     {
-		m_Info.PictureHistory[i] = m_Pictures + i;
+        m_Info.PictureHistory[i] = m_Pictures + i;
     }
 
     // Get input BITMAPINFOHEADER
@@ -299,7 +244,7 @@ HRESULT CDeinterlaceFilter::StartStreaming()
     }
 
     // Get output BITMAPINFOHEADER
-	FixOverlayPitch();
+    FixOverlayPitch();
 
     m_Info.FieldDiff = -1;
     m_Info.CombFactor = -1;
@@ -318,8 +263,8 @@ HRESULT CDeinterlaceFilter::StartStreaming()
 
     m_History = 0;
     m_LastStop = -1;
-	m_MediaStart = 1;
-	m_MediaStop = 2;
+    m_MediaStart = 1;
+    m_MediaStop = 2;
 
     return CTransformFilter::StartStreaming();
 }
@@ -335,7 +280,7 @@ HRESULT CDeinterlaceFilter::StopStreaming()
         m_pInputHistory[i] = NULL;
     }
 
-	InactivateDeinterlacePlugin();
+    InactivateDeinterlacePlugin();
 
     return CTransformFilter::StopStreaming();
 }
@@ -429,7 +374,7 @@ HRESULT CDeinterlaceFilter::GetOutputSampleBuffer(IMediaSample* pSample, IMediaS
         CMediaType cmt(*pmt);
         DeleteMediaType(pmt);
         m_pOutput->SetMediaType(&cmt);
-		FixOverlayPitch();
+        FixOverlayPitch();
     }
 
     //
@@ -507,79 +452,79 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStop;
     BYTE* pSourceBuffer;
-	BOOL IsTimeValid = TRUE;
-	BOOL IsMediaTimeValid = TRUE;
-	LONGLONG InputStart;
-	LONGLONG InputStop;
+    BOOL IsTimeValid = TRUE;
+    BOOL IsMediaTimeValid = TRUE;
+    LONGLONG InputStart;
+    LONGLONG InputStop;
 
-	int DeinterlaceType;
-	BOOL bIsOddFieldFirst;
-	BOOL bRateDouble;
+    int DeinterlaceType;
+    BOOL bIsOddFieldFirst;
+    BOOL bRateDouble;
 
-	//
-	// Prevent deadlocking - don't hold m_DeinterlaceLock during Receive,
-	// because Deliver() may block during pause.
-	//
-	{
-	    CAutoLock l(&m_DeinterlaceLock);
-		DeinterlaceType = m_DeinterlaceType;
-		bIsOddFieldFirst = m_bIsOddFieldFirst;
-		bRateDouble = m_RateDouble;
-	}
+    //
+    // Prevent deadlocking - don't hold m_DeinterlaceLock during Receive,
+    // because Deliver() may block during pause.
+    //
+    {
+        CAutoLock l(&m_DeinterlaceLock);
+        DeinterlaceType = m_DeinterlaceType;
+        bIsOddFieldFirst = m_bIsOddFieldFirst;
+        bRateDouble = m_RateDouble;
+    }
 
     
-	// Copy the media times
+    // Copy the media times
     // Will be updated later if needed
     if (pSource->GetMediaTime(&InputStart,&InputStop) == NOERROR) 
     {
-		IsMediaTimeValid = TRUE;
+        IsMediaTimeValid = TRUE;
     }
-	else
-	{
-		IsMediaTimeValid = FALSE;
-	}
+    else
+    {
+        IsMediaTimeValid = FALSE;
+    }
 
     // Get the input stream times
     if(SUCCEEDED(pSource->GetTime(&rtStart,&rtStop)))
     {
         IsTimeValid = TRUE;
     }
-	else
-	{
+    else
+    {
         IsTimeValid = FALSE;
-		
-	}
+        
+    }
 
     // Check for stream continuity
     // note that the IsDiscontinuity
     // method appears not to work
     if (IsTimeValid) 
     {
-		if(rtStart != m_LastStop)
-		{
-			DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
-			m_History = 0;
-			for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
-			{
-				m_pInputHistory[i] = NULL;
-			}
-		}
-	    m_LastStop = rtStop;
+        if(rtStart != m_LastStop)
+        {
+            DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
+            m_History = 0;
+            for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
+            {
+                m_pInputHistory[i] = NULL;
+            }
+        }
+        m_LastStop = rtStop;
     }
-	else
-	{
-		if(FAILED(pSource->IsDiscontinuity()))
-		{
-			DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
-			m_History = 0;
-			for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
-			{
-				m_pInputHistory[i] = NULL;
-			}
-		}
-		// force use of media time if we don't have sample time
-		IsMediaTimeValid = TRUE;
-	}
+    else
+    {
+        if(FAILED(pSource->IsDiscontinuity()))
+        {
+            DbgLog((LOG_TRACE, 2, TEXT("Discontinity, flushing history buffer.")));
+            m_History = 0;
+            for (int i = 0;i < MAX_FRAMES_IN_HISTORY ;i++)
+            {
+                m_pInputHistory[i] = NULL;
+            }
+        }
+        // force use of media time if we don't have sample time
+        IsMediaTimeValid = TRUE;
+    }
 
     pSource->GetPointer(&pSourceBuffer);
     
@@ -638,17 +583,17 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
             Bob(&m_Info);
         }
 
-		if(IsTimeValid)
-		{
-			REFERENCE_TIME tempStop = rtStart + (rtStop - rtStart)/2;
-			pDest->SetTime(&rtStart,&tempStop);
-		}
-		if(IsMediaTimeValid)
-		{
-			pDest->SetMediaTime(&m_MediaStart, &m_MediaStop);
-			++m_MediaStart;
-			++m_MediaStop;
-		}
+        if(IsTimeValid)
+        {
+            REFERENCE_TIME tempStop = rtStart + (rtStop - rtStart)/2;
+            pDest->SetTime(&rtStart,&tempStop);
+        }
+        if(IsMediaTimeValid)
+        {
+            pDest->SetMediaTime(&m_MediaStart, &m_MediaStop);
+            ++m_MediaStart;
+            ++m_MediaStop;
+        }
 
         m_pOutput->Deliver(pDest);
 
@@ -697,25 +642,25 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     }
 
     // Time for second field
-	if(IsTimeValid)
-	{
-		REFERENCE_TIME tempStart;
-		if(bRateDouble)
-		{
-			tempStart = rtStart + (rtStop - rtStart)/2;
-		}
-		else
-		{
-			tempStart = rtStart;
-		}
-		pDest->SetTime(&tempStart,&rtStop);
-	}
-	if(IsMediaTimeValid)
-	{
-		pDest->SetMediaTime(&m_MediaStart, &m_MediaStop);
-		++m_MediaStart;
-		++m_MediaStop;
-	}
+    if(IsTimeValid)
+    {
+        REFERENCE_TIME tempStart;
+        if(bRateDouble)
+        {
+            tempStart = rtStart + (rtStop - rtStart)/2;
+        }
+        else
+        {
+            tempStart = rtStart;
+        }
+        pDest->SetTime(&tempStart,&rtStop);
+    }
+    if(IsMediaTimeValid)
+    {
+        pDest->SetMediaTime(&m_MediaStart, &m_MediaStop);
+        ++m_MediaStart;
+        ++m_MediaStop;
+    }
 
     m_pOutput->Deliver(pDest);
 
@@ -727,7 +672,7 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
     {
         if(m_HistoryAllowed > 1)
         {
-			ASSERT(m_HistoryAllowed < MAX_FRAMES_IN_HISTORY+1);
+            ASSERT(m_HistoryAllowed < MAX_FRAMES_IN_HISTORY+1);
             for (int i = m_HistoryAllowed-1; i > 0; --i)
             {
                 m_pInputHistory[i] = m_pInputHistory[i - 1];
@@ -747,7 +692,7 @@ HRESULT CDeinterlaceFilter::Deinterlace(IMediaSample* pSource)
 //
 void CDeinterlaceFilter::CallDeinterlaceMethod(TDeinterlaceInfo* pInfo, int DeinterlaceType)
 {
-	switch (DeinterlaceType) 
+    switch (DeinterlaceType) 
     {
     case IDC_WEAVE:
     default:
@@ -767,17 +712,17 @@ void CDeinterlaceFilter::CallDeinterlaceMethod(TDeinterlaceInfo* pInfo, int Dein
         DeinterlaceFieldBob(pInfo);
         break;
     case IDC_TYPE4:
-		// Make sure plug-in is activated
-		if (m_pDeinterlacePlugin)
-		{
-			// Hold critical section to be sure m_pDeinterlacePlugin is valid
-		    CAutoLock l(&m_DeinterlaceLock);
-	        m_pDeinterlacePlugin->Process(pInfo);
-		}
-		else {
-			// This should never happen, but something may fail.
-	        DeinterlaceFieldWeave(pInfo);
-		}
+        // Make sure plug-in is activated
+        if (m_pDeinterlacePlugin)
+        {
+            // Hold critical section to be sure m_pDeinterlacePlugin is valid
+            CAutoLock l(&m_DeinterlaceLock);
+            m_pDeinterlacePlugin->Process(pInfo);
+        }
+        else {
+            // This should never happen, but something may fail.
+            DeinterlaceFieldWeave(pInfo);
+        }
         break;
     }
 }
@@ -800,7 +745,7 @@ void CDeinterlaceFilter::FixOverlayPitch()
     }
     m_Info.OverlayPitch = pbiOut->biWidth*pbiOut->biBitCount/8;
 
-	return;
+    return;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -986,31 +931,31 @@ HRESULT CDeinterlaceFilter::GetMediaType(int iPosition, CMediaType* pMediaType)
     CMediaType cmt;
     cmt = m_pInput->CurrentMediaType();
 
-	
-	//
-	// Caution! m_RateDouble may be changed by put_RefreshRateDouble
-	//
+    
+    //
+    // Caution! m_RateDouble may be changed by put_RefreshRateDouble
+    //
     if(IsEqualGUID(*cmt.FormatType(), FORMAT_VIDEOINFO2)) 
     {
         VIDEOINFOHEADER2* pvi = (VIDEOINFOHEADER2*)cmt.Format();
-		if(m_RateDouble)
-		{
-			// we output 2 samples for each incoming sample
-			pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
-			pvi->dwBitRate = pvi->dwBitRate*2;
-		}
-		// output always interlaced
-	    pvi->dwInterlaceFlags = 0;
+        if(m_RateDouble)
+        {
+            // we output 2 samples for each incoming sample
+            pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+            pvi->dwBitRate = pvi->dwBitRate*2;
+        }
+        // output always interlaced
+        pvi->dwInterlaceFlags = 0;
     }
     else if(IsEqualGUID(*cmt.FormatType(), FORMAT_VideoInfo)) 
     {
         VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)cmt.Format();
-		if(m_RateDouble)
-		{
-			// we output 2 samples for each incoming sample
-			pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
-			pvi->dwBitRate = pvi->dwBitRate*2;
-		}
+        if(m_RateDouble)
+        {
+            // we output 2 samples for each incoming sample
+            pvi->AvgTimePerFrame = pvi->AvgTimePerFrame/2;
+            pvi->dwBitRate = pvi->dwBitRate*2;
+        }
     }
 
     *pMediaType = cmt;
@@ -1206,7 +1151,7 @@ STDMETHODIMP CDeinterlaceFilter::get_DScalerPluginName(BSTR* pPlugInName)
 STDMETHODIMP CDeinterlaceFilter::put_DScalerPluginName(BSTR PlugInName)
 {
     CAutoLock cAutolock(&m_DeinterlaceLock);
-	InactivateDeinterlacePlugin();
+    InactivateDeinterlacePlugin();
     m_PlugInName = PlugInName;
     return ActivateDeinterlacePlugin();
 }

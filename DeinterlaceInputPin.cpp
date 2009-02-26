@@ -26,25 +26,6 @@
 //  do so, delete this exception statement from your version.
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2001/12/13 16:53:28  adcockj
-// Improvements to processing with sources with allocators
-// that won't give us lots of history.  We should fail back properly
-//
-// Revision 1.2  2001/12/11 17:31:58  adcockj
-// Added new GUIDs to avoid clash with hauppauge version
-// Fixed breaking of COM interface rules by adding IDeinterlace2
-// Added new setting to control Refresh rate doubling
-// Test of code to allow deinterlacing even if we get very little history
-//
-// Revision 1.1  2001/11/13 13:51:43  adcockj
-// Tidy up code and made to mostly conform to coding standards
-// Changed history behaviour
-// Made to use DEINTERLACE_INFO throughout
-//
-/////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"

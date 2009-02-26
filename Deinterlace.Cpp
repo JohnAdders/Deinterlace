@@ -26,41 +26,6 @@
 //  do so, delete this exception statement from your version.
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.11  2001/11/14 13:32:05  adcockj
-// Moved COM definitions into IDL
-//
-// Revision 1.10  2001/11/13 13:51:43  adcockj
-// Tidy up code and made to mostly conform to coding standards
-// Changed history behaviour
-// Made to use DEINTERLACE_INFO throughout
-//
-// Revision 1.9  2001/11/10 10:35:01  pgubanov
-// Correct handling of interlace flags, GreedyH now works fine.
-//
-// Revision 1.8  2001/11/09 15:34:27  pgubanov
-// Try to work with DScaler plugins. Some code adopted from DIDMO, but less general anyway. For some reason, plugin crashes...
-//
-// Revision 1.7  2001/11/09 11:42:39  pgubanov
-// Output 2 frames for each inout frame. Doesn't care about input media type too much - just assume all input samples are frames. Never connect to anything except YUY2.
-//
-// Revision 1.6  2001/11/01 11:04:19  adcockj
-// Updated headers
-// Checked in changes by Micheal Eskin and Hauppauge
-//
-/////////////////////////////////////////////////////////////////////////////
-// Change Log
-//
-// Date          Developer             Changes
-//
-// 28 Jun 2000   John Adcock           File created
-//
-// 20 Sep 2001   Michael Eskin         Changed to support use with video from bt878
-//                                     Driver 
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include <initguid.h>

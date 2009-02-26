@@ -26,29 +26,6 @@
 //  do so, delete this exception statement from your version.
 //
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.4  2001/11/13 13:51:43  adcockj
-// Tidy up code and made to mostly conform to coding standards
-// Changed history behaviour
-// Made to use DEINTERLACE_INFO throughout
-//
-// Revision 1.3  2001/11/09 15:34:27  pgubanov
-// Try to work with DScaler plugins. Some code adopted from DIDMO, but less general anyway. For some reason, plugin crashes...
-//
-// Revision 1.2  2001/11/01 11:04:19  adcockj
-// Updated headers
-// Checked in changes by Micheal Eskin and Hauppauge
-//
-/////////////////////////////////////////////////////////////////////////////
-// Change Log
-//
-// Date          Developer             Changes
-//
-// 30 Dec 2000   Mark Rejhon           Split into separate module
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "DI.h"
@@ -176,10 +153,10 @@ BOOL TwoFrameMMX(TDeinterlaceInfo* pInfo)
 
     for (Line = 0; Line < pInfo->FieldHeight - 1; ++Line)
     {
-		BYTE* Dest2 = Dest;
-		BYTE* OVal2UseInAsm = OVal2;
-		_asm
-		{
+        BYTE* Dest2 = Dest;
+        BYTE* OVal2UseInAsm = OVal2;
+        _asm
+        {
             // We'll be using a couple registers that have meaning in the C code, so
             // save them.
             mov OldSI, esi
@@ -418,10 +395,10 @@ static BOOL TwoFrameSSE(TDeinterlaceInfo* pInfo)
 
     for (Line = 0; Line < pInfo->FieldHeight - 1; ++Line)
     {
-		BYTE* Dest2 = Dest;
-		BYTE* OVal2UseInAsm = OVal2;
-		_asm
-		{
+        BYTE* Dest2 = Dest;
+        BYTE* OVal2UseInAsm = OVal2;
+        _asm
+        {
             // We'll be using a couple registers that have meaning in the C code, so
             // save them.
             mov OldSI, esi
