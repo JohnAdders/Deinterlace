@@ -89,7 +89,6 @@
 				SetChecksum="true"
 				BaseAddress="0x1d1c0000"
 				ImportLibrary="./Deinterlace.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -194,7 +193,6 @@
 				EntryPointSymbol="DllEntryPoint@12"
 				BaseAddress="0x1d1c0000"
 				ImportLibrary="./Deinterlace.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
